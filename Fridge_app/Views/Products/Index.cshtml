@@ -1,0 +1,35 @@
+﻿@model IEnumerable<Product>
+
+@{
+    ViewData["Title"] = "Lista Produktów";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nazwa</th>
+            <th>Kcal</th>
+            <th>Kategoria</th>
+            <th>Cena (min)</th>
+            <th>Cena (max)</th>
+            <th>Jednostka</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Kcal</td>
+                <td>@item.ProductCategory</td>
+                <td>@item.PriceMin.ToString("C")</td>
+                <td>@item.PriceMax.ToString("C")</td>
+                <td>@item.Unit</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-primary">Dodaj nowy produkt</a>

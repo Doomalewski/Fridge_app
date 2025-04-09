@@ -1,0 +1,25 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Fridge_app.Models
+{
+    public class Meal
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int? RecipeId { get; set; }
+
+        [ForeignKey("RecipeId")]
+        public Recipe Recipe { get; set; }
+
+        public string Description { get; set; }
+
+        public double Calories { get; set; }
+
+        public string Category { get; set; }
+
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+    }
+
+}
