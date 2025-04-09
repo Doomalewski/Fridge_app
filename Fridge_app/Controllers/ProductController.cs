@@ -1,5 +1,4 @@
-﻿// Controllers/ProductsController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Fridge_app.Models;
 using Fridge_app.Services;
 using CsvHelper.Configuration;
@@ -8,21 +7,25 @@ using CsvHelper;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Fridge_app.Models.Mappers;
+using Microsoft.EntityFrameworkCore;
 
-public class ProductsController : Controller
+public class ProductController : Controller
 {
     private readonly ProductService _productService;
 
-    public ProductsController(ProductService productService)
+    public ProductController(ProductService productService)
     {
         _productService = productService;
     }
-
+    public async Task<IActionResult> Index()
+    {
+        var products = await _productService.GetAllProductsAsync();
+        return View(products);
+    }
     public IActionResult Create()
     {
         ViewBag.Units = new List<string> { "pcs", "kg", "liter" };
-        var processor = new CsvProcessor();
-        processor.ProcessCsv("C:\\en.openfoodfacts.org.products.csv");
 
 
         return View();
@@ -39,84 +42,122 @@ public class ProductsController : Controller
         }
         return View(product);
     }
-
-}
-public class Producttest
-{
-    public string ProductCode { get; set; }
-    public string ProductName { get; set; }
-    public string IngredientsText { get; set; }
-    public double? EnergyKj100g { get; set; }
-    public double? EnergyKcal100g { get; set; }
-    public double? Fat100g { get; set; }
-    public double? SaturatedFat100g { get; set; }
-    public double? Carbohydrates100g { get; set; }
-    public double? Sugars100g { get; set; }
-    public double? Proteins100g { get; set; }
-    public double? Salt100g { get; set; }
-    // Dodaj inne właściwości według potrzeb
-}
-
-public sealed class ProductMap : ClassMap<Producttest>
-{
-    public ProductMap()
+    public IActionResult Upload()
     {
-        Map(m => m.ProductCode).Name("code");
-        Map(m => m.ProductName).Name("product_name");
-        Map(m => m.IngredientsText).Name("ingredients_text");
-        Map(m => m.EnergyKj100g).Name("energy-kj_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.EnergyKcal100g).Name("energy-kcal_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.Fat100g).Name("fat_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.SaturatedFat100g).Name("saturated-fat_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.Carbohydrates100g).Name("carbohydrates_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.Sugars100g).Name("sugars_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.Proteins100g).Name("proteins_100g").TypeConverter<NullableDoubleConverter>();
-        Map(m => m.Salt100g).Name("salt_100g").TypeConverter<NullableDoubleConverter>();
-        // Dodaj mapowania dla innych kolumn
+        return View();
     }
-}
 
-public class NullableDoubleConverter : DefaultTypeConverter
-{
-    public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Upload(IFormFile file)
     {
-        if (string.IsNullOrWhiteSpace(text))
-            return null;
-        if (text.Equals("unknown", StringComparison.OrdinalIgnoreCase)) return null;
-
-        if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+        if (file == null || file.Length == 0)
         {
-            return result;
+            ModelState.AddModelError("", "Proszę wybrać plik.");
+            return View();
         }
 
-        return null;
-    }
-}
-
-public class CsvProcessor
-{
-    public void ProcessCsv(string filePath)
-    {
-        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        List<Product> products = new List<Product>();
+        try
         {
-            Delimiter = "\t", // Ustaw separator na tabulację
-            PrepareHeaderForMatch = args => args.Header.ToLower(),
-            MissingFieldFound = null,
-            HeaderValidated = null,
-            BadDataFound = null
-        };
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                Delimiter = ";",
+                HasHeaderRecord = false,
+                MissingFieldFound = null
+            };
 
-        using (var reader = new StreamReader(filePath))
-        using (var csv = new CsvReader(reader, config))
-        {
-            csv.Context.RegisterClassMap<ProductMap>();
-            var products = csv.GetRecords<Producttest>().ToList();
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            using (var csv = new CsvReader(reader, config))
+            {
+                csv.Context.RegisterClassMap<ProductCsvMap>();
+                products = csv.GetRecords<Product>().ToList();
+            }
 
-            // Przetwarzaj produkty (np. zapisz do bazy danych)
             foreach (var product in products)
             {
-                Console.WriteLine($"Product: {product.ProductName}, Kalorie: {product.EnergyKcal100g}");
+                product.Unit = "g";
+                product.ProductCategory = ProductCategory.Other;
+                product.PriceMin = 0;
+                product.PriceMax = 0;
             }
         }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", $"Błąd podczas przetwarzania pliku: {ex.Message}");
+            return View();
+        }
+
+        return View("Preview", products);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirm(List<Product> products)
+    {
+        if (ModelState.IsValid)
+        {
+            foreach (var product in products)
+            {
+                await _productService.AddProductAsync(product);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+        return View("Preview", products);
+    }
+    public async Task<IActionResult> Edit(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var product = await _productService.GetProductAsync(id.Value);
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.Units = new List<string> { "pcs", "kg", "liter", "g" };
+        return View(product);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, Product product)
+    {
+        if (id != product.Id)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                await _productService.UpdateProductAsync(product);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ProductExists(product.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        ViewBag.Units = new List<string> { "pcs", "kg", "liter", "g" };
+        return View(product);
+    }
+
+    private async Task<bool> ProductExists(int id)
+    {
+        return (await _productService.GetProductAsync(id)) != null;
     }
 }
+

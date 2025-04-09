@@ -1,0 +1,102 @@
+﻿@model Fridge_app.Models.Product
+@{
+    ViewData["Title"] = "Edytuj Produkt";
+}
+
+<h2>@ViewData["Title"]</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Kcal" class="control-label"></label>
+                        <input asp-for="Kcal" class="form-control" />
+                        <span asp-validation-for="Kcal" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Unit" class="control-label"></label>
+                        <select asp-for="Unit" class="form-control" asp-items="new SelectList(ViewBag.Units)">
+                            <option value="">Wybierz jednostkę</option>
+                        </select>
+                        <span asp-validation-for="Unit" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Fat" class="control-label"></label>
+                        <input asp-for="Fat" class="form-control" />
+                        <span asp-validation-for="Fat" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Carbohydrates" class="control-label"></label>
+                        <input asp-for="Carbohydrates" class="form-control" />
+                        <span asp-validation-for="Carbohydrates" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Protein" class="control-label"></label>
+                        <input asp-for="Protein" class="form-control" />
+                        <span asp-validation-for="Protein" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ProductCategory" class="control-label"></label>
+                <select asp-for="ProductCategory" class="form-control"
+                        asp-items="Html.GetEnumSelectList<ProductCategory>()">
+                    <option value="">Wybierz kategorię</option>
+                </select>
+                <span asp-validation-for="ProductCategory" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="PriceMin" class="control-label"></label>
+                        <input asp-for="PriceMin" class="form-control" />
+                        <span asp-validation-for="PriceMin" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="PriceMax" class="control-label"></label>
+                        <input asp-for="PriceMax" class="form-control" />
+                        <span asp-validation-for="PriceMax" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Zapisz" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

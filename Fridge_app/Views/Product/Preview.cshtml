@@ -1,0 +1,77 @@
+﻿@model List<Product>
+@{
+    ViewData["Title"] = "Podgląd importu";
+}
+
+<h2>Podgląd importowanych produktów</h2>
+<p>Liczba produktów do zaimportowania: @Model.Count</p>
+
+<form asp-action="Confirm" method="post">
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Nazwa</th>
+                <th>Kcal</th>
+                <th>Tłuszcze</th>
+                <th>W tym nasycone</th>
+                <th>Węglowodany</th>
+                <th>Cukry</th>
+                <th>Białko</th>
+                <th>Błonnik</th>
+                <th>Sól</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Model[i].Name
+                        <input type="hidden" asp-for="@Model[i].Name" />
+                    </td>
+                    <td>
+                        @Model[i].Kcal
+                        <input type="hidden" asp-for="@Model[i].Kcal" />
+                    </td>
+                    <td>
+                        @Model[i].Fat
+                        <input type="hidden" asp-for="@Model[i].Fat" />
+                    </td>
+                    <td>
+                        @Model[i].UnsaturatedFat
+                        <input type="hidden" asp-for="@Model[i].UnsaturatedFat" />
+                    </td>
+                    <td>
+                        @Model[i].Carbohydrates
+                        <input type="hidden" asp-for="@Model[i].Carbohydrates" />
+                    </td>
+                    <td>
+                        @Model[i].Sugar
+                        <input type="hidden" asp-for="@Model[i].Sugar" />
+                    </td>
+                    <td>
+                        @Model[i].Protein
+                        <input type="hidden" asp-for="@Model[i].Protein" />
+                    </td>
+                    <td>
+                        @Model[i].Fiber
+                        <input type="hidden" asp-for="@Model[i].Fiber" />
+                    </td>
+                    <td>
+                        @Model[i].Salt
+                        <input type="hidden" asp-for="@Model[i].Salt" />
+                    </td>
+                    <input type="hidden" asp-for="@Model[i].Unit" />
+                    <input type="hidden" asp-for="@Model[i].ProductCategory" />
+                    <input type="hidden" asp-for="@Model[i].PriceMin" />
+                    <input type="hidden" asp-for="@Model[i].PriceMax" />
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-success">Zatwierdź import</button>
+        <a asp-action="Upload" class="btn btn-danger">Anuluj</a>
+    </div>
+</form>

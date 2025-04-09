@@ -19,6 +19,7 @@ namespace Fridge_app.Models
         public double Sugar { get; set; }
         public double Protein { get; set; }
         public double Fiber { get; set; }
+
         public double Salt { get; set; }
 
         // 🔧 Sugestia: rozdziel PriceRange na MinPrice / MaxPrice
