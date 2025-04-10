@@ -1,7 +1,6 @@
 using Fridge_app.Data;
 using Fridge_app.Repositories;
 using Fridge_app.Services;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using System;
