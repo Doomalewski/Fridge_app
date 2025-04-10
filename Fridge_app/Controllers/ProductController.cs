@@ -27,7 +27,6 @@ public class ProductController : Controller
     {
         ViewBag.Units = new List<string> { "pcs", "kg", "liter" };
 
-
         return View();
     }
 
