@@ -20,6 +20,11 @@ namespace Fridge_app.Models
         public Diet Diet { get; set; }
 
         public ICollection<StoredProduct> Fridge { get; set; }
+        public User()
+        {
+            Fridge = new HashSet<StoredProduct>();
+            Diet = new Diet();
+        }
     }
 
 

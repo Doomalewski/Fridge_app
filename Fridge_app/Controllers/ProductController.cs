@@ -24,7 +24,6 @@ public class ProductsController : Controller
         var processor = new CsvProcessor();
         processor.ProcessCsv("C:\\en.openfoodfacts.org.products.csv");
 
-
         return View();
     }
 
