@@ -3,4 +3,22 @@
 }
 
 <div class="text-center">
+    @if (User.Identity.IsAuthenticated)
+    {
+        <h1 class="display-4">Witaj, @User.Identity.Name!</h1>
+        <form asp-controller="User" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-danger">Wyloguj</button>
+        </form>
+    }
+    else
+    {
+        <h1 class="display-4">Witaj</h1>
+        <p>Zaloguj się aby korzystać z aplikacji</p>
+        <a asp-controller="User" asp-action="Login" class="btn btn-primary">Logowanie</a>
+        <a asp-controller="User" asp-action="Register" class="btn btn-secondary">Rejestracja</a>
+    }
 
+    <div class="mt-4">
+        <a asp-controller="Product" asp-action="Upload" class="btn btn-info">Importuj z CSV</a>
+    </div>
+</div>
