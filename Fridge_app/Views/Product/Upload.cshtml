@@ -1,5 +1,7 @@
-﻿@{
+﻿@using Fridge_app.Models
+@{
     ViewData["Title"] = "Import produktów";
+    var categories = Enum.GetValues(typeof(ProductCategory)).Cast<ProductCategory>();
 }
 
 <h2>Import produktów z pliku CSV</h2>
@@ -9,6 +11,17 @@
         <label for="file">Wybierz plik CSV:</label>
         <input type="file" name="file" class="form-control" accept=".csv" />
     </div>
+
+    <div class="form-group">
+        <label for="category">Kategoria produktu:</label>
+        <select name="category" class="form-control">
+            @foreach (var cat in categories)
+            {
+                <option value="@cat">@cat</option>
+            }
+        </select>
+    </div>
+
     <button type="submit" class="btn btn-primary">Importuj</button>
     <a asp-action="Index" class="btn btn-secondary">Powrót</a>
 </form>
