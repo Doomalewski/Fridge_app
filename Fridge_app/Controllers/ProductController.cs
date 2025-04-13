@@ -48,7 +48,7 @@ public class ProductController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Upload(IFormFile file)
+    public async Task<IActionResult> Upload(IFormFile file, ProductCategory category)
     {
         if (file == null || file.Length == 0)
         {
@@ -76,7 +76,7 @@ public class ProductController : Controller
             foreach (var product in products)
             {
                 product.Unit = "g";
-                product.ProductCategory = ProductCategory.Other;
+                product.ProductCategory = category;
                 product.PriceMin = 0;
                 product.PriceMax = 0;
             }
