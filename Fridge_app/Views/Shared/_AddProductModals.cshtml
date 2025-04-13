@@ -1,0 +1,72 @@
+﻿@* Views/Shared/_AddProductModals.cshtml *@
+
+<!-- Modal wyszukiwania produktów -->
+<div class="modal fade" id="productSearchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dodaj nowy produkt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Formularz wyszukiwania -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <input type="text" id="searchTerm" class="form-control" placeholder="Wyszukaj produkt...">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="searchCategory" class="form-select">
+                            <option value="">Wszystkie kategorie</option>
+                            @foreach (var category in Enum.GetValues(typeof(ProductCategory)))
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" onclick="searchProducts()">
+                            <i class="bi bi-search"></i> Szukaj
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Wyniki wyszukiwania -->
+                <div id="searchResults" class=""></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal formularza dodawania -->
+<div class="modal fade" id="addProductFormModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dodaj produkt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addProductForm">
+                <div class="modal-body">
+                    <input type="hidden" id="selectedProductId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nazwa produktu</label>
+                        <input type="text" class="form-control" id="selectedProductName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ilość</label>
+                        <input type="number" step="0.1" min="0.1"
+                               class="form-control" id="quantity" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data ważności (opcjonalnie)</label>
+                        <input type="date" class="form-control" id="expirationDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">Zapisz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

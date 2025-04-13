@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Fridge_app.Data;
+using System.Linq.Expressions;
 
 namespace Fridge_app.Repositories
 {
@@ -35,6 +36,44 @@ namespace Fridge_app.Repositories
         {
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
+        }
+        public async Task<T> GetByIdWithIncludesAsync(
+            int id,
+            Func<IQueryable<T>, IQueryable<T>> include = null)
+        {
+            var query = _dbSet.AsQueryable();
+
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            return await query
+                .FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+        }
+
+        public async Task<T> GetByConditionAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            var query = _dbSet.AsQueryable();
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.Where(predicate).ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            var query = _dbSet.AsQueryable();
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.Where(predicate).ToListAsync();
         }
     }
 }

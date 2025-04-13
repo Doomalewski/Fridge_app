@@ -1,0 +1,56 @@
+﻿@model IEnumerable<Product>
+
+@if (Model.Any())
+{
+    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-2">
+        @foreach (var product in Model)
+        {
+            <div class="col">
+                <div class="card h-100 clickable-product-card"
+                     data-product-id="@product.Id"
+                     data-product-name="@product.Name"
+                     onclick="selectProduct(@product.Id, '@product.Name')">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">@product.Name</h6>
+                        <div class="card-text text-muted small">
+                            <span class="badge bg-secondary">@product.ProductCategory</span>
+                            <div class="mt-1">
+                                <small>@product.Kcal kcal</small><br>
+                                <small>@product.Unit</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Brak produktów spełniających kryteria</div>
+}
+
+<style>
+    .clickable-product-card {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid rgba(0,0,0,0.125);
+    }
+
+        .clickable-product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #f8f9fa;
+        }
+
+
+    .card-title {
+        font-size: 0.9rem;
+        line-height: 1.2;
+        font-weight: 500;
+    }
+
+    .card-text small {
+        font-size: 0.75rem;
+    }
+</style>

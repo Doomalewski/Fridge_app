@@ -1,4 +1,5 @@
 using Fridge_app.Data;
+using Fridge_app.Models;
 using Fridge_app.Repositories;
 using Fridge_app.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -20,7 +21,12 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 // Rejestracja serwisu
 builder.Services.AddScoped<ProductService>();
 // Rejestracja generycznego repozytorium
+builder.Services.AddScoped<IRepository<Product>, EfCoreRepository<Product>>();
+builder.Services.AddScoped<IRepository<StoredProduct>, EfCoreRepository<StoredProduct>>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<StoredProductService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
+builder.Services.AddScoped<UserService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
@@ -46,6 +52,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", false);
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
