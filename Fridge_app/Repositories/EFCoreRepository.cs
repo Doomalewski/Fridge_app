@@ -75,5 +75,10 @@ namespace Fridge_app.Repositories
             }
             return await query.Where(predicate).ToListAsync();
         }
+
+        public IQueryable<T> Where(Expression<Func<T, bool>> predicate)
+        {
+            return _dbSet.Where(predicate);
+        }
     }
 }

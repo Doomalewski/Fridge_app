@@ -3,7 +3,7 @@
 @model Fridge_app.Models.User
 
 @{
-    ViewData["Title"] = "Twoja lodówka";
+    ViewData["Title"] = "Home Page";
 }
 
 <div class="container">
@@ -12,27 +12,41 @@
         <!-- Nagłówek z przyciskiem dodawania -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Witaj, @User.Identity.Name!</h2>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productSearchModal">
-                <i class="bi bi-plus-circle"></i> Dodaj produkt
-            </button>
         </div>
 
-        <!-- Lista produktów -->
-        <div class="row row-cols-1 row-cols-md-3 g-4" id="fridgeItems">
-            @foreach (var item in Model.Fridge)
-            {
-                <div class="col">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Product.Name</h5>
-                            <div class="card-text">
-                                <div>Ilość: @item.Quantity @item.Product.Unit</div>
-                                <div>Ważny do: @item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</div>
-                            </div>
-                        </div>
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary h-100">
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Moja lodówka</h4>
+                        <a asp-controller="Fridge" asp-action="Index" class="stretched-link text-white text-decoration-none">Zobacz</a>
                     </div>
                 </div>
-            }
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success h-100">
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Lista produktów</h4>
+                        <a asp-controller="Product" asp-action="Index" class="stretched-link text-white text-decoration-none">Zarządzaj</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning h-100">
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Użytkownicy</h4>
+                        <a asp-controller="User" asp-action="Index" class="stretched-link text-white text-decoration-none">Zarządzaj</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger h-100">
+                    <div class="card-body text-center">
+                        <h4 class="card-title">Statystyki</h4>
+                        <a asp-controller="Admin" asp-action="Stats" class="stretched-link text-white text-decoration-none">Przegląd</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Dodaj modale z częściowego widoku -->
@@ -50,68 +64,3 @@
     }
 </div>
 
-@section Scripts {
-    <script>
-        // Zaktualizowana funkcja wyszukiwania (case-insensitive)
-        function searchProducts() {
-            const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
-            const category = document.getElementById('searchCategory').value;
-
-            fetch(`/Home/SearchProducts?searchTerm=${encodeURIComponent(searchTerm)}&category=${category}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('searchResults').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('searchResults').innerHTML =
-                        '<div class="col-12"><div class="alert alert-danger">Błąd podczas wyszukiwania</div></div>';
-                });
-        }
-
-        // Funkcja wyboru produktu
-        function selectProduct(productId, productName) {
-            document.getElementById('selectedProductId').value = productId;
-            document.getElementById('selectedProductName').value = productName;
-
-            // Zamknięcie modala wyszukiwania
-            const searchModal = bootstrap.Modal.getInstance(document.getElementById('productSearchModal'));
-            searchModal.hide();
-
-            // Otwarcie modala formularza
-            const addModal = new bootstrap.Modal(document.getElementById('addProductFormModal'));
-            addModal.show();
-        }
-
-        // Obsługa formularza
-        document.getElementById('addProductForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const formData = {
-                ProductId: parseInt(document.getElementById('selectedProductId').value),
-                Quantity: parseFloat(document.getElementById('quantity').value),
-                ExpirationDate: document.getElementById('expirationDate').value || null
-            };
-
-            try {
-                const response = await fetch('/Home/AddProduct', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    location.reload(); // Odśwież stronę po udanym zapisie
-                } else {
-                    alert('Wystąpił błąd podczas zapisywania');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Błąd połączenia z serwerem');
-            }
-        });
-    </script>
-}

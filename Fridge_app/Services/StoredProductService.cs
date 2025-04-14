@@ -1,6 +1,7 @@
 ﻿using Fridge_app.Models.ViewModels;
 using Fridge_app.Models;
 using Fridge_app.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fridge_app.Services
 {
@@ -26,5 +27,15 @@ namespace Fridge_app.Services
 
             await _storedProductRepository.AddAsync(storedProduct);
         }
+
+        public async Task<IEnumerable<StoredProduct>> GetUserFridgeAsync(int userId)
+        {
+            return await _storedProductRepository
+                .Where(p => p.UserId == userId)
+                .Include(p => p.Product)
+                .ToListAsync();
+        }
+
+
     }
 }
