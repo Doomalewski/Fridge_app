@@ -1,0 +1,145 @@
+﻿@model Fridge_app.Models.ViewModels.MealCreateViewModel
+@{
+    var availableProducts = Model.AvailableProducts ?? new List<Product>();
+}
+<div class="container mt-4">
+    <h2>Dodaj nowy posiłek</h2>
+    
+    <form asp-action="Create">
+        <div class="row">
+            <!-- Podstawowe informacje -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title">Informacje o posiłku</h4>
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <input asp-for="Description" class="form-control">
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <!-- Pozostałe pola -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Przepis i produkty -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title">Przepis</h4>
+                        
+                        <!-- Czas i trudność -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Recipe.TimePrep" class="form-label"></label>
+                                <input asp-for="Recipe.TimePrep" class="form-control">
+                                <span asp-validation-for="Recipe.TimePrep" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Recipe.Difficulty" class="form-label"></label>
+                                <select asp-for="Recipe.Difficulty" class="form-select">
+                                    <option value="Easy">Easy</option>
+                                    <option value="Średni">Średni</option>
+                                    <option value="Trudny">Trudny</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Zmień sekcję wyboru kategorii na -->
+                        <div class="mb-3">
+                            <label asp-for="Category" class="form-label">Kategoria</label>
+                            <select asp-for="Category" class="form-select">
+                                <option value="">Wybierz kategorię</option>
+                                <option value="Śniadanie">Śniadanie</option>
+                                <option value="Obiad">Obiad</option>
+                                <option value="Kolacja">Kolacja</option>
+                                <option value="Przekąska">Przekąska</option>
+                                <option value="Deser">Deser</option>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                        </div>
+
+                        <!-- Wybór produktów -->
+                        <div class="mt-4">
+                            <h5>Składniki</h5>
+                            <div id="productsContainer">
+                                @for (var i = 0; i < Model.SelectedProducts.Count; i++)
+                                {
+                                    <div class="product-row mb-3">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <select asp-for="SelectedProducts[i].ProductId"
+                                                        class="form-select"
+                                                        asp-items="@(new SelectList(Model.AvailableProducts ?? new List<Product>(), "Id", "Name"))">
+                                                    <option value="">Wybierz produkt</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <input asp-for="SelectedProducts[i].Amount" 
+                                                       class="form-control" 
+                                                       placeholder="Ilość">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" 
+                                                        class="btn btn-danger w-100" 
+                                                        onclick="removeProduct(this)">
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" 
+                                    class="btn btn-secondary mt-2" 
+                                    onclick="addProduct()">
+                                Dodaj składnik
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Zapisz posiłek</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function addProduct() {
+            const index = document.querySelectorAll('.product-row').length;
+            const template = `
+                <div class="product-row mb-3">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <select name="SelectedProducts[${index}].ProductId" 
+                                    class="form-select">
+                                <option value="">Wybierz produkt</option>
+                                @foreach (var product in Model.AvailableProducts)
+                                {
+                                    <option value="@product.Id">@product.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <input name="SelectedProducts[${index}].Amount" 
+                                   class="form-control" 
+                                   placeholder="Ilość">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" 
+                                    class="btn btn-danger w-100" 
+                                    onclick="removeProduct(this)">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('productsContainer').insertAdjacentHTML('beforeend', template);
+        }
+
+        function removeProduct(button) {
+            button.closest('.product-row').remove();
+        }
+    </script>
+}

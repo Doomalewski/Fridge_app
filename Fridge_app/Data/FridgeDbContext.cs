@@ -64,6 +64,7 @@ namespace Fridge_app.Data
                 .HasForeignKey(sp => sp.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
             // === Diet ===
             modelBuilder.Entity<Diet>()
                 .HasMany(d => d.Meals)
@@ -102,6 +103,13 @@ namespace Fridge_app.Data
                 .HasOne(pwa => pwa.Product)
                 .WithMany()
                 .HasForeignKey(pwa => pwa.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<ProductWithAmount>()
+                .HasOne(p => p.Recipe)
+                .WithMany(r => r.Products)
+                .HasForeignKey(p => p.RecipeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // === HumanStats ===

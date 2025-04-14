@@ -27,6 +27,10 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<StoredProductService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IMealService, MealService>();
+builder.Services.AddScoped<IRepository<Meal>, EfCoreRepository<Meal>>();
+builder.Services.AddScoped<IRepository<Recipe>, EfCoreRepository<Recipe>>();
+builder.Services.AddScoped<IRepository<ProductWithAmount>, EfCoreRepository<ProductWithAmount>>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {

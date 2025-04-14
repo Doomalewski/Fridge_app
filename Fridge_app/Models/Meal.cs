@@ -17,6 +17,7 @@ namespace Fridge_app.Models
 
         public double Calories { get; set; }
 
+        [Required]
         public string Category { get; set; }
 
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
