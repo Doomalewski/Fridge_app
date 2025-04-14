@@ -13,8 +13,11 @@ namespace Fridge_app.Repositories
         Task DeleteAsync(T entity);
         Task<T> GetByIdWithIncludesAsync(
             int id,
-            Func<IQueryable<T>, IQueryable<T>> include = null); Task<T> GetByConditionAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
+            Func<IQueryable<T>, IQueryable<T>> include = null); 
+        Task<T> GetByConditionAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
         Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
+
+        IQueryable<T> Where(Expression<Func<T, bool>> predicate);
     }
 }

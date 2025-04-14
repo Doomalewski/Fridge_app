@@ -20,6 +20,25 @@ namespace Fridge_app.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("Login", "User");
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var fridgeItems = await _storedProductService.GetUserFridgeAsync(userId);
+
+            var userModel = new User
+            {
+                Fridge = fridgeItems.ToList()
+            };
+
+            return View(userModel);
+        }
+
+
+
+        [HttpGet]
         public async Task<IActionResult> AddProduct(ProductSearchViewModel searchModel)
         {
             if (!User.Identity.IsAuthenticated)
