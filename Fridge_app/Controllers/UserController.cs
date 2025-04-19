@@ -6,14 +6,20 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
+using Fridge_app.Services;
 
 public class UserController : Controller
 {
     private readonly FridgeDbContext _context;
-
-    public UserController(FridgeDbContext context)
+    private readonly UserService _userService;
+    private readonly GeminiService _geminiService;
+    private readonly IMealService _mealService;
+    public UserController(FridgeDbContext context, UserService userService, GeminiService geminiService,IMealService mealService)
     {
         _context = context;
+        _userService = userService;
+        _geminiService = geminiService;
+        _mealService = mealService;
     }
 
     [HttpGet]
@@ -97,5 +103,86 @@ public class UserController : Controller
     {
         await HttpContext.SignOutAsync();
         return RedirectToAction("Login");
+    }
+    [HttpPost]
+    public async Task<IActionResult> GenerateMeal()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var user = await _userService.GetUserByIdAsync(userId);
+
+            if (user?.Fridge == null || !user.Fridge.Any())
+            {
+                TempData["Error"] = "Brak produktów w lodówce do generowania przepisów";
+                return RedirectToAction("Dashboard"); // Przekieruj gdzieś odpowiednio
+            }
+
+            var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge);
+            return View("MealPreview", generatedMeal);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd generowania przepisu: {ex.Message}";
+            return RedirectToAction("Dashboard");
+        }
+    }
+    [HttpPost]
+    public async Task<IActionResult> SaveMeal([Bind("Description,Calories,Category,Recipe,SelectedProducts")] MealCreateViewModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Nieprawidłowe dane przepisu";
+                return RedirectToAction("Dashboard");
+            }
+
+            // Mapowanie do modelu domenowego
+            var meal = new Meal
+            {
+                Description = model.Description,
+                Calories = model.Calories,
+                Category = model.Category,
+            };
+
+            var recipe = new Recipe
+            {
+                TimePrep = model.Recipe.TimePrep,
+                MakingSteps = model.Recipe.MakingSteps,
+                Difficulty = model.Recipe.Difficulty
+            };
+
+            var products = new List<ProductWithAmount>();
+            foreach (var selectedProduct in model.SelectedProducts)
+            {
+                // Weryfikacja istnienia produktu
+                var productExists = await _context.Products
+                    .AnyAsync(p => p.Id == selectedProduct.ProductId);
+
+                if (!productExists)
+                {
+                    TempData["Error"] = $"Produkt o ID {selectedProduct.ProductId} nie istnieje";
+                    return RedirectToAction("Dashboard");
+                }
+
+                products.Add(new ProductWithAmount
+                {
+                    ProductId = selectedProduct.ProductId,
+                    Amount = selectedProduct.Amount
+                });
+            }
+
+            // Wywołanie serwisu
+            await _mealService.CreateMealAsync(meal, recipe, products);
+
+            TempData["Success"] = "Przepis został pomyślnie zapisany!";
+            return RedirectToAction("MealDetails", new { id = meal.Id });
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd zapisywania: {ex.Message}";
+            return RedirectToAction("Dashboard");
+        }
     }
 }

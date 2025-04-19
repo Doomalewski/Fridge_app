@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     [DbContext(typeof(FridgeDbContext))]
-    [Migration("20250414175630_AddRecipeProductRelationship")]
-    partial class AddRecipeProductRelationship
+    [Migration("20250419180736_migracja")]
+    partial class migracja
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -204,6 +204,10 @@ namespace Fridge_app.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MakingSteps")
                         .IsRequired()
                         .HasColumnType("text");
 

@@ -27,7 +27,11 @@
         </div>
     }
 </div>
-
+<form asp-controller ="User" asp-action="GenerateMeal" method="post">
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-magic"></i> Wygeneruj przepis
+    </button>
+</form>
 @await Html.PartialAsync("_AddProductModals")
 @section Scripts {
     <script>

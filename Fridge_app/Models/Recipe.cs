@@ -10,7 +10,7 @@ namespace Fridge_app.Models
         public ICollection<ProductWithAmount> Products { get; set; }
 
         public double TimePrep { get; set; }
-
+        public string MakingSteps { get; set; }
         public string Difficulty { get; set; }
     }
 

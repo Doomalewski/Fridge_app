@@ -204,6 +204,10 @@ namespace Fridge_app.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("MakingSteps")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<double>("TimePrep")
                         .HasColumnType("double precision");
 

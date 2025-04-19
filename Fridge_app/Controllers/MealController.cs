@@ -6,6 +6,7 @@ using Fridge_app.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Runtime.CompilerServices;
 
 namespace Fridge_app.Controllers
 {
@@ -51,6 +52,7 @@ namespace Fridge_app.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MealCreateViewModel model)
         {
+            ModelState.Remove("Recipe.MakingSteps");
             if (ModelState.IsValid)
             {
                 var validCategories = new[] { "Śniadanie", "Obiad", "Kolacja", "Przekąska", "Deser" };
@@ -58,6 +60,7 @@ namespace Fridge_app.Controllers
                 var recipe = new Recipe
                 {
                     TimePrep = model.Recipe.TimePrep,
+                    MakingSteps = "test",
                     Difficulty = model.Recipe.Difficulty
                 };
 
@@ -85,7 +88,5 @@ namespace Fridge_app.Controllers
             model.AvailableProducts = (await _productRepository.GetAllAsync()).ToList();
             return View(model);
         }
-
-        // Pozostałe akcje: Edit, Delete, Details
     }
 }

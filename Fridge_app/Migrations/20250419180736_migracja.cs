@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     /// <inheritdoc />
-    public partial class AddProductCategoryEnum : Migration
+    public partial class migracja : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -76,6 +76,7 @@ namespace Fridge_app.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TimePrep = table.Column<double>(type: "double precision", nullable: false),
+                    MakingSteps = table.Column<string>(type: "text", nullable: false),
                     Difficulty = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -175,7 +176,7 @@ namespace Fridge_app.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ProductId = table.Column<int>(type: "integer", nullable: false),
                     Amount = table.Column<double>(type: "double precision", nullable: false),
-                    RecipeId = table.Column<int>(type: "integer", nullable: true)
+                    RecipeId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
