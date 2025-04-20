@@ -2,6 +2,7 @@
 using Fridge_app.Models;
 using Fridge_app.Repositories;
 using Microsoft.EntityFrameworkCore;
+using GenerativeAI.Types;
 
 namespace Fridge_app.Services
 {
@@ -35,7 +36,24 @@ namespace Fridge_app.Services
                 .Include(p => p.Product)
                 .ToListAsync();
         }
+        public async Task UpdateProductAsync(EditProductViewModel model)
+        {
+            var storedProduct = await _storedProductRepository.GetByIdAsync(model.Id);
+            if (storedProduct == null)
+                throw new ArgumentException("Produkt nie istnieje");
 
+            storedProduct.Quantity = model.NewQuantity;
+            await _storedProductRepository.UpdateAsync(storedProduct);
+        }
+
+        public async Task DeleteProductAsync(int id)
+        {
+            var storedProduct = await _storedProductRepository.GetByIdAsync(id);
+            if (storedProduct == null)
+                throw new ArgumentException("Produkt nie istnieje");
+
+            await _storedProductRepository.DeleteAsync(storedProduct);
+        }
 
     }
 }

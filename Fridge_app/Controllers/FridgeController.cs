@@ -74,5 +74,40 @@ namespace Fridge_app.Controllers
             // Jeśli wystąpiły błędy, wróć do widoku z formularzem
             return RedirectToAction("AddProduct");
         }
+        [HttpPost]
+        public async Task<IActionResult> UpdateProduct(EditProductViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    TempData["Error"] = "Nieprawidłowa ilość produktu";
+                    return RedirectToAction("Index");
+                }
+
+                await _storedProductService.UpdateProductAsync(model);
+                TempData["Success"] = "Produkt został zaktualizowany";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            try
+            {
+                await _storedProductService.DeleteProductAsync(id);
+                TempData["Success"] = "Produkt został usunięty";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            return RedirectToAction("Index");
+        }
     }
 }
