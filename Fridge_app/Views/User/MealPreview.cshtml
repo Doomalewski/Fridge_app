@@ -32,10 +32,13 @@
                     <div class="col-md-6">
                         <h5>Składniki:</h5>
                         <ul>
-                            @foreach (var product in Model.SelectedProducts)
-                            {
-                                <li>@product.Amount g produktu ID: @product.ProductId</li>
-                            }
+                            <ul>
+                                @foreach (var product in Model.SelectedProducts)
+                                {
+                                    var productName = Model.AvailableProducts.FirstOrDefault(p => p.Id == product.ProductId)?.Name ?? "Nieznany produkt";
+                                    <li>@product.Amount g - @productName</li>
+                                }
+                            </ul>
                         </ul>
                     </div>
                     <div class="col-md-6">

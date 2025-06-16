@@ -133,4 +133,71 @@
             </text>
         }
     </script>
+    <script>
+            // Zaktualizowana funkcja wyszukiwania (case-insensitive)
+            function searchProducts() {
+                const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
+                const category = document.getElementById('searchCategory').value;
+
+                fetch(`/Home/SearchProducts?searchTerm=${encodeURIComponent(searchTerm)}&category=${category}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(html => {
+                        document.getElementById('searchResults').innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('searchResults').innerHTML =
+                            '<div class="col-12"><div class="alert alert-danger">Błąd podczas wyszukiwania</div></div>';
+                    });
+            }
+
+        // Funkcja wyboru produktu
+        function selectProduct(productId, productName) {
+            document.getElementById('selectedProductId').value = productId;
+            document.getElementById('selectedProductName').value = productName;
+
+            // Zamknięcie modala wyszukiwania
+            const searchModal = bootstrap.Modal.getInstance(document.getElementById('productSearchModal'));
+            searchModal.hide();
+
+            // Otwarcie modala formularza
+            const addModal = new bootstrap.Modal(document.getElementById('addProductFormModal'));
+            addModal.show();
+        }
+
+        // Obsługa formularza
+        document.getElementById('addProductForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = {
+                ProductId: parseInt(document.getElementById('selectedProductId').value),
+                Quantity: parseFloat(document.getElementById('quantity').value),
+                ExpirationDate: document.getElementById('expirationDate').value || null
+            };
+
+            try {
+                const response = await fetch('/Home/AddProduct', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    location.reload(); // Odśwież stronę po udanym zapisie
+                } else {
+                    alert('Wystąpił błąd podczas zapisywania');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Błąd połączenia z serwerem');
+            }
+
+        });
+    </script>
 }
+
+
+
