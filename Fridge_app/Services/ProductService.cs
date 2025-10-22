@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Fridge_app.Models;
+using Fridge_app.Models.ViewModels;
 using Fridge_app.Repositories;
 
 namespace Fridge_app.Services
@@ -28,6 +29,20 @@ namespace Fridge_app.Services
                 (!category.HasValue || p.ProductCategory == category.Value);
 
             return await _productRepository.FindAsync(predicate);
+        }
+        public async Task<int> getCaloriesFromProductsWithAmounts(List<SelectedProductViewModel> productsWithAmounts)
+        {
+            var calories = 0;
+            var products = await _productRepository.GetAllAsync();
+            foreach (var product in productsWithAmounts)
+            {
+                var prod = products.FirstOrDefault(p => p.Id == product.ProductId);
+                if (prod != null)
+                {
+                    calories += (prod.Kcal * (int)product.Amount) / 100;
+                }
+            }
+            return calories;
         }
     }
 }

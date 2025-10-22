@@ -12,9 +12,10 @@ namespace Fridge_app.Services
     {
         private readonly string _apiKey;
         private readonly GenerativeModel _model;
-
-        public GeminiService()
+        private readonly ProductService _productService;
+        public GeminiService(ProductService productService)
         {
+            _productService = productService;
             _apiKey = "AIzaSyCbs99F9XIq7XgvtHegspxU8k6Ri7k_5CM" ?? throw new ArgumentNullException(nameof(_apiKey));
             var googleAI = new GoogleAi(_apiKey);
             _model = googleAI.CreateGenerativeModel("gemini-2.0-flash");
@@ -34,8 +35,8 @@ namespace Fridge_app.Services
         }
         public async Task<MealCreateViewModel> GenerateMealAsync(IEnumerable<StoredProduct> storedProducts, List<CookingTool> cookingTools)
         {
-            var productsString = FormatProductsForPrompt(storedProducts);
-            var cookingToolsString = string.Join(", ", cookingTools.Select(ct=>ct.ToString()));
+            var productsString = string.Join(", ", storedProducts.Select(sp => sp.ToString()));
+            var cookingToolsString = string.Join(", ", cookingTools.Select(ct => ct.ToString()));
 
             var prompt = $$"""
             Na podstawie poniższych danych wygeneruj propozycję posiłku w formacie **czystego JSON** zgodnego ze schematem.
@@ -120,23 +121,20 @@ namespace Fridge_app.Services
             {
                 var response = await _model.GenerateContentAsync(prompt);
                 var jsonResponse = CleanJsonResponse(response?.Text);
-                return JsonConvert.DeserializeObject<MealCreateViewModel>(jsonResponse);
+                var mealViewModel = JsonConvert.DeserializeObject<MealCreateViewModel>(jsonResponse);
+                if (mealViewModel != null)
+                {
+                    mealViewModel.AvailableProducts = _productService.GetAllProductsAsync().Result.ToList();
+                    mealViewModel.Calories = await _productService.getCaloriesFromProductsWithAmounts(mealViewModel.SelectedProducts);
+                }
+                else
+                    throw new ApplicationException("Nie udało się zdeserializować odpowiedzi AI do modelu MealCreateViewModel.");
+                return mealViewModel;
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("Błąd przetwarzania odpowiedzi AI", ex);
             }
-        }
-        private string FormatProductsForPrompt(IEnumerable<StoredProduct> storedProducts)
-        {
-            return string.Join("\n", storedProducts.Select((p, index) =>
-                $"{index + 1}. {FormatProduct(p)}"));
-        }
-        private string FormatProduct(StoredProduct storedProduct)
-        {
-            var product = storedProduct.Product;
-            return $"{storedProduct.Quantity} {product.Unit} {product.Name} " +
-                   $"(ważne do: {storedProduct.ExpirationDate:yyyy-MM-dd})";
         }
         private string CleanJsonResponse(string rawResponse)
         {

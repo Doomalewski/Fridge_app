@@ -5,11 +5,6 @@ namespace Fridge_app.Models.ViewModels
 {
     public class MealCreateViewModel
     {
-        public MealCreateViewModel()
-        {
-            AvailableProducts = new List<Product>();
-            SelectedProducts = new List<SelectedProductViewModel>();
-        }
         [Required]
         public string Description { get; set; }
         public int Calories { get; set; }
@@ -18,7 +13,7 @@ namespace Fridge_app.Models.ViewModels
         public string Category { get; set; }
         public RecipeViewModel Recipe { get; set; } = new RecipeViewModel();
         public List<SelectedProductViewModel> SelectedProducts { get; set; } = new List<SelectedProductViewModel>();
-        public List<Product> AvailableProducts { get; set; }
+        public List<Product> AvailableProducts { get; set; } = new List<Product>();
     }
 
 }

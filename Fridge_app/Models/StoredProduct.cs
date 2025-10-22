@@ -25,6 +25,10 @@ namespace Fridge_app.Models
 
         [ForeignKey("UserId")]
         public User User { get; set; }
-    }
 
+        public override string ToString()
+        {
+            return $"[Name:{Product.Name} - Quantity:{Quantity} - Id:{ProductId} - ExpirationDate:{ExpirationDate:yyyy-MM-dd}]";
+        }
+    }
 }

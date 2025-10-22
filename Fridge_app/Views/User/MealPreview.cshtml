@@ -4,55 +4,109 @@
     ViewData["Title"] = "Proponowany przepis";
 }
 
-<div class="container">
-    <h2>@Model.Description</h2>
-        <form asp-action="SaveMeal" method="post">
-        <!-- Ukryte pola dla podstawowych właściwości -->
+<div class="container mt-4">
+    <h2 class="mb-3">@Model.Description</h2>
+
+    <form asp-action="SaveMeal" method="post">
+        <!-- Ukryte pola potrzebne do zapisania -->
         <input type="hidden" asp-for="Description" />
         <input type="hidden" asp-for="Calories" />
         <input type="hidden" asp-for="Category" />
-        
-        <!-- Pola dla Recipe -->
+        <input type="hidden" asp-for="Recipe.Name" />
         <input type="hidden" asp-for="Recipe.Difficulty" />
-        
-        <!-- Pola dla SelectedProducts -->
+        <input type="hidden" asp-for="Recipe.CreatedAt" />
+
         @for (var i = 0; i < Model.SelectedProducts.Count; i++)
         {
             <input type="hidden" asp-for="SelectedProducts[i].ProductId" />
             <input type="hidden" asp-for="SelectedProducts[i].Amount" />
         }
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Szczegóły przepisu</h4>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Informacje o posiłku</h4>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Składniki:</h5>
-                        <ul>
-                            <ul>
-                                @foreach (var product in Model.SelectedProducts)
-                                {
-                                    var productName = Model.AvailableProducts.FirstOrDefault(p => p.Id == product.ProductId)?.Name ?? "Nieznany produkt";
-                                    <li>@product.Amount g - @productName</li>
-                                }
-                            </ul>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Informacje:</h5>
-                        <p>Kalorie: @Model.Calories kcal</p>
-                        <p>Kategoria: @Model.Category</p>
-                        <p>Poziom trudności: @Model.Recipe.Difficulty</p>
-                    </div>
-                </div>
-
-                <h5 class="mt-4">Instrukcja:</h5>
-
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save"></i> Zapisz przepis
-                    </button>
+                <p><strong>Kalorie:</strong> @Model.Calories kcal</p>
+                <p><strong>Kategoria:</strong> @Model.Category</p>
+                <p><strong>Poziom trudności:</strong> @Model.Recipe.Difficulty</p>
+                <p><strong>Nazwa przepisu:</strong> @Model.Recipe.Name</p>
             </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Składniki</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.Recipe.Ingridients?.Any() == true)
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ing in Model.Recipe.Ingridients)
+                        {
+                            var productName = Model.AvailableProducts.FirstOrDefault(p => p.Id == ing.ProductId)?.Name ?? "Nieznany produkt";
+                            <li class="list-group-item">
+                                <strong>@productName</strong> — @ing.Amount g
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">Brak składników do wyświetlenia.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Kroki przygotowania</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.Recipe.Steps?.Any() == true)
+                {
+                    <ol class="list-group list-group-numbered">
+                        @foreach (var step in Model.Recipe.Steps.OrderBy(s => s.StepNumber))
+                        {
+                            <li class="list-group-item">
+                                <p class="mb-1">@step.Instruction</p>
+                                <small class="text-muted">Czas: @step.StepTime min</small>
+                            </li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <p class="text-muted">Brak kroków przygotowania.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Narzędzia kuchenne</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.Recipe.CookingTools?.Any() == true)
+                {
+                    <ul class="list-inline">
+                        @foreach (var tool in Model.Recipe.CookingTools)
+                        {
+                            <li class="list-inline-item badge bg-secondary p-2 m-1">@tool.Name</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">Brak wymaganych narzędzi.</p>
+                }
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save"></i> Zapisz przepis
+            </button>
         </div>
     </form>
 </div>
