@@ -32,13 +32,16 @@ namespace Fridge_app.Services
                 return $"Błąd podczas generowania odpowiedzi: {ex.Message}";
             }
         }
-        public async Task<MealCreateViewModel> GenerateMealAsync(IEnumerable<StoredProduct> storedProducts)
+        public async Task<MealCreateViewModel> GenerateMealAsync(IEnumerable<StoredProduct> storedProducts, List<CookingTool> cookingTools)
         {
             var productsString = FormatProductsForPrompt(storedProducts);
+            var cookingToolsString = string.Join(", ", cookingTools.Select(ct=>ct.ToString()));
 
-            var prompt = $$"""
+        var prompt = $$"""
         Na podstawie tych składników:
         {{productsString}}
+        I tych narzędzi:
+        {{cookingTools}}
 
         Wygeneruj posiłek w formacie JSON według schematu:
         {
@@ -46,17 +49,18 @@ namespace Fridge_app.Services
             "Calories": number,
             "Category": "string",
             "Recipe": {
-                "TimePrep": number,
-                "MakingSteps": "string",
-                "Difficulty": "string"
+                "Name": "string",
+                "Difficulty": "string",
+                "CreatedAt": "yyyy-MM-ddTHH:mm:ss",
+                "Ingridients": [ { "ProductId": number, "Amount": number } ],
+                "Steps": [ { "StepNumber": number, "Instruction": "string", "StepTime": number } ],
+                "CookingTools": [ { "Id": number, "Name": "string" } ]
             },
             "SelectedProducts": [
-                {
-                    "ProductId": number,
-                    "Amount": number
-                }
+                { "ProductId": number, "Amount": number }
             ]
         }
+
 
         Zasady:
         - Odpowiedź musi być CZYSTYM JSON bez dodatkowego tekstu

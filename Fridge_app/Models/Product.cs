@@ -22,7 +22,6 @@ namespace Fridge_app.Models
 
         public double Salt { get; set; }
 
-        // 🔧 Sugestia: rozdziel PriceRange na MinPrice / MaxPrice
         public double PriceMin { get; set; }
         public double PriceMax { get; set; }
 

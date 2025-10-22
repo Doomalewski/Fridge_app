@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     [DbContext(typeof(FridgeDbContext))]
-    [Migration("20250419180736_migracja")]
-    partial class migracja
+    [Migration("20251022124254_migracjaOne")]
+    partial class migracjaOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,23 @@ namespace Fridge_app.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Fridge_app.Models.CookingTool", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CookingTools");
+                });
 
             modelBuilder.Entity("Fridge_app.Models.Diet", b =>
                 {
@@ -86,9 +103,6 @@ namespace Fridge_app.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("Calories")
-                        .HasColumnType("double precision");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -203,20 +217,48 @@ namespace Fridge_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Difficulty")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("MakingSteps")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<double>("TimePrep")
-                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
                     b.ToTable("Recipes");
+                });
+
+            modelBuilder.Entity("Fridge_app.Models.RecipeStep", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Instruction")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan?>("StepTime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeStep");
                 });
 
             modelBuilder.Entity("Fridge_app.Models.StoredProduct", b =>
@@ -338,6 +380,36 @@ namespace Fridge_app.Migrations
                     b.ToTable("MealTags", (string)null);
                 });
 
+            modelBuilder.Entity("RecipeCookingTool", b =>
+                {
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CookingToolId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RecipeId", "CookingToolId");
+
+                    b.HasIndex("CookingToolId");
+
+                    b.ToTable("RecipeCookingTools", (string)null);
+                });
+
+            modelBuilder.Entity("UserCookingTool", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CookingToolId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "CookingToolId");
+
+                    b.HasIndex("CookingToolId");
+
+                    b.ToTable("UserCookingTools", (string)null);
+                });
+
             modelBuilder.Entity("Fridge_app.Models.Meal", b =>
                 {
                     b.HasOne("Fridge_app.Models.Diet", null)
@@ -361,12 +433,23 @@ namespace Fridge_app.Migrations
                         .IsRequired();
 
                     b.HasOne("Fridge_app.Models.Recipe", "Recipe")
-                        .WithMany("Products")
+                        .WithMany("Ingridients")
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("Fridge_app.Models.RecipeStep", b =>
+                {
+                    b.HasOne("Fridge_app.Models.Recipe", "Recipe")
+                        .WithMany("Steps")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Recipe");
                 });
@@ -422,6 +505,36 @@ namespace Fridge_app.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RecipeCookingTool", b =>
+                {
+                    b.HasOne("Fridge_app.Models.CookingTool", null)
+                        .WithMany()
+                        .HasForeignKey("CookingToolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fridge_app.Models.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UserCookingTool", b =>
+                {
+                    b.HasOne("Fridge_app.Models.CookingTool", null)
+                        .WithMany()
+                        .HasForeignKey("CookingToolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fridge_app.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Fridge_app.Models.Diet", b =>
                 {
                     b.Navigation("Meals");
@@ -434,7 +547,9 @@ namespace Fridge_app.Migrations
 
             modelBuilder.Entity("Fridge_app.Models.Recipe", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("Ingridients");
+
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("Fridge_app.Models.User", b =>

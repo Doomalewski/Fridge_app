@@ -15,8 +15,6 @@ namespace Fridge_app.Models
 
         public string Description { get; set; }
 
-        public double Calories { get; set; }
-
         [Required]
         public string Category { get; set; }
 

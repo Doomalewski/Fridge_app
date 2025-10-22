@@ -7,11 +7,24 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     /// <inheritdoc />
-    public partial class migracja : Migration
+    public partial class migracjaOne : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "CookingTools",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CookingTools", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Diets",
                 columns: table => new
@@ -75,9 +88,9 @@ namespace Fridge_app.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TimePrep = table.Column<double>(type: "double precision", nullable: false),
-                    MakingSteps = table.Column<string>(type: "text", nullable: false),
-                    Difficulty = table.Column<string>(type: "text", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Difficulty = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -148,7 +161,6 @@ namespace Fridge_app.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     RecipeId = table.Column<int>(type: "integer", nullable: true),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    Calories = table.Column<double>(type: "double precision", nullable: false),
                     Category = table.Column<string>(type: "text", nullable: false),
                     DietId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -196,6 +208,52 @@ namespace Fridge_app.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RecipeCookingTools",
+                columns: table => new
+                {
+                    RecipeId = table.Column<int>(type: "integer", nullable: false),
+                    CookingToolId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeCookingTools", x => new { x.RecipeId, x.CookingToolId });
+                    table.ForeignKey(
+                        name: "FK_RecipeCookingTools_CookingTools_CookingToolId",
+                        column: x => x.CookingToolId,
+                        principalTable: "CookingTools",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RecipeCookingTools_Recipes_RecipeId",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RecipeStep",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    StepNumber = table.Column<int>(type: "integer", nullable: false),
+                    Instruction = table.Column<string>(type: "text", nullable: false),
+                    StepTime = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    RecipeId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeStep", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RecipeStep_Recipes_RecipeId",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "StoredProducts",
                 columns: table => new
                 {
@@ -217,6 +275,30 @@ namespace Fridge_app.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_StoredProducts_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserCookingTools",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    CookingToolId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserCookingTools", x => new { x.UserId, x.CookingToolId });
+                    table.ForeignKey(
+                        name: "FK_UserCookingTools_CookingTools_CookingToolId",
+                        column: x => x.CookingToolId,
+                        principalTable: "CookingTools",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserCookingTools_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -273,6 +355,16 @@ namespace Fridge_app.Migrations
                 column: "RecipeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RecipeCookingTools_CookingToolId",
+                table: "RecipeCookingTools",
+                column: "CookingToolId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RecipeStep_RecipeId",
+                table: "RecipeStep",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StoredProducts_ProductId",
                 table: "StoredProducts",
                 column: "ProductId");
@@ -281,6 +373,11 @@ namespace Fridge_app.Migrations
                 name: "IX_StoredProducts_UserId",
                 table: "StoredProducts",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserCookingTools_CookingToolId",
+                table: "UserCookingTools",
+                column: "CookingToolId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_DietId",
@@ -303,7 +400,16 @@ namespace Fridge_app.Migrations
                 name: "ProductWithAmounts");
 
             migrationBuilder.DropTable(
+                name: "RecipeCookingTools");
+
+            migrationBuilder.DropTable(
+                name: "RecipeStep");
+
+            migrationBuilder.DropTable(
                 name: "StoredProducts");
+
+            migrationBuilder.DropTable(
+                name: "UserCookingTools");
 
             migrationBuilder.DropTable(
                 name: "WeightEntries");
@@ -316,6 +422,9 @@ namespace Fridge_app.Migrations
 
             migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "CookingTools");
 
             migrationBuilder.DropTable(
                 name: "Users");

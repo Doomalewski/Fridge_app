@@ -13,9 +13,7 @@
         <input type="hidden" asp-for="Category" />
         
         <!-- Pola dla Recipe -->
-        <input type="hidden" asp-for="Recipe.TimePrep" />
         <input type="hidden" asp-for="Recipe.Difficulty" />
-        <input type="hidden" asp-for="Recipe.MakingSteps" />
         
         <!-- Pola dla SelectedProducts -->
         @for (var i = 0; i < Model.SelectedProducts.Count; i++)
@@ -45,13 +43,11 @@
                         <h5>Informacje:</h5>
                         <p>Kalorie: @Model.Calories kcal</p>
                         <p>Kategoria: @Model.Category</p>
-                        <p>Czas przygotowania: @Model.Recipe.TimePrep minut</p>
                         <p>Poziom trudności: @Model.Recipe.Difficulty</p>
                     </div>
                 </div>
 
                 <h5 class="mt-4">Instrukcja:</h5>
-                <div class="border p-3">@Html.Raw(Model.Recipe.MakingSteps)</div>
 
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-save"></i> Zapisz przepis

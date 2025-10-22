@@ -44,7 +44,7 @@ namespace Fridge_app.Services
                 id,
                 query => query
                     .Include(m => m.Recipe)
-                        .ThenInclude(r => r.Products)
+                        .ThenInclude(r => r.Ingridients)
                             .ThenInclude(p => p.Product)
                     .Include(m => m.Tags)
             );
@@ -55,17 +55,14 @@ namespace Fridge_app.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Zapisz przepis
                 await _recipeRepository.AddAsync(recipe);
 
-                // Zapisz produkty
                 foreach (var product in products)
                 {
                     product.RecipeId = recipe.Id;
                     await _productAmountRepository.AddAsync(product);
                 }
 
-                // Powiąż przepis z posiłkiem
                 meal.RecipeId = recipe.Id;
                 await _mealRepository.AddAsync(meal);
 
@@ -77,6 +74,7 @@ namespace Fridge_app.Services
                 throw;
             }
         }
+
 
         public async Task UpdateMealAsync(Meal meal)
         {

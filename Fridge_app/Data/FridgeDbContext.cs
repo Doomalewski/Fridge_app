@@ -4,6 +4,7 @@ namespace Fridge_app.Data
 {
     using Fridge_app.Models;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Internal;
     using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
     public class FridgeDbContext : DbContext
@@ -19,6 +20,7 @@ namespace Fridge_app.Data
         public DbSet<HumanStats> HumanStats { get; set; }
         public DbSet<WeightEntry> WeightEntries { get; set; }
 
+        public DbSet<CookingTool> CookingTools { get; set; }
         public FridgeDbContext(DbContextOptions<FridgeDbContext> options)
             : base(options)
         {
@@ -49,6 +51,33 @@ namespace Fridge_app.Data
                     }
                 }
             }
+            // Relacja Recipe <-> CookingTool (wiele-do-wielu)
+            modelBuilder.Entity<Recipe>()
+                .HasMany(r => r.CookingTools)
+                .WithMany()
+                .UsingEntity<Dictionary<string, object>>(
+                    "RecipeCookingTool",
+                    j => j.HasOne<CookingTool>().WithMany().HasForeignKey("CookingToolId"),
+                    j => j.HasOne<Recipe>().WithMany().HasForeignKey("RecipeId"),
+                    j =>
+                    {
+                        j.HasKey("RecipeId", "CookingToolId");
+                        j.ToTable("RecipeCookingTools");
+                    });
+
+            // Relacja User <-> CookingTool (wiele-do-wielu)
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.CookingTools)
+                .WithMany()
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserCookingTool",
+                    j => j.HasOne<CookingTool>().WithMany().HasForeignKey("CookingToolId"),
+                    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                    j =>
+                    {
+                        j.HasKey("UserId", "CookingToolId");
+                        j.ToTable("UserCookingTools");
+                    });
             // === User ===
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Fridge)
@@ -94,7 +123,7 @@ namespace Fridge_app.Data
 
             // === Recipe ===
             modelBuilder.Entity<Recipe>()
-                .HasMany(r => r.Products)
+                .HasMany(r => r.Ingridients)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -108,7 +137,7 @@ namespace Fridge_app.Data
 
             modelBuilder.Entity<ProductWithAmount>()
                 .HasOne(p => p.Recipe)
-                .WithMany(r => r.Products)
+                .WithMany(r => r.Ingridients)
                 .HasForeignKey(p => p.RecipeId)
                 .OnDelete(DeleteBehavior.Cascade);
 

@@ -118,7 +118,7 @@ public class UserController : Controller
                 return RedirectToAction("Dashboard"); // Przekieruj gdzieś odpowiednio
             }
 
-            var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge);
+            var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge, user.CookingTools);
             return View("MealPreview", generatedMeal);
         }
         catch (Exception ex)
@@ -142,16 +142,19 @@ public class UserController : Controller
             var meal = new Meal
             {
                 Description = model.Description,
-                Calories = model.Calories,
                 Category = model.Category,
             };
 
             var recipe = new Recipe
             {
-                TimePrep = model.Recipe.TimePrep,
-                MakingSteps = model.Recipe.MakingSteps,
-                Difficulty = model.Recipe.Difficulty
+                Name = model.Recipe.Name,
+                Difficulty = model.Recipe.Difficulty,
+                CreatedAt = model.Recipe.CreatedAt,
+                Ingridients = model.Recipe.Ingridients,
+                Steps = model.Recipe.Steps,
+                CookingTools = model.Recipe.CookingTools
             };
+
 
             var products = new List<ProductWithAmount>();
             foreach (var selectedProduct in model.SelectedProducts)

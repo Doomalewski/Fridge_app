@@ -59,8 +59,6 @@ namespace Fridge_app.Controllers
 
                 var recipe = new Recipe
                 {
-                    TimePrep = model.Recipe.TimePrep,
-                    MakingSteps = "test",
                     Difficulty = model.Recipe.Difficulty
                 };
 
@@ -74,7 +72,6 @@ namespace Fridge_app.Controllers
                     new Meal
                     {
                         Description = model.Description,
-                        Calories = model.Calories,
                         Category = model.Category,
                         Tags = model.Tags
                     },
