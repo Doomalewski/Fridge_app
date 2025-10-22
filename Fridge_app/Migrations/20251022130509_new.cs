@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     /// <inheritdoc />
-    public partial class migracjaOne : Migration
+    public partial class @new : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -239,7 +239,7 @@ namespace Fridge_app.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     StepNumber = table.Column<int>(type: "integer", nullable: false),
                     Instruction = table.Column<string>(type: "text", nullable: false),
-                    StepTime = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    StepTime = table.Column<int>(type: "integer", nullable: true),
                     RecipeId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>

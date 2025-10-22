@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     [DbContext(typeof(FridgeDbContext))]
-    [Migration("20251022124254_migracjaOne")]
-    partial class migracjaOne
+    [Migration("20251022130509_new")]
+    partial class @new
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -251,8 +251,8 @@ namespace Fridge_app.Migrations
                     b.Property<int>("StepNumber")
                         .HasColumnType("integer");
 
-                    b.Property<TimeSpan?>("StepTime")
-                        .HasColumnType("interval");
+                    b.Property<int?>("StepTime")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

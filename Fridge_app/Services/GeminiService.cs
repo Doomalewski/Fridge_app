@@ -37,55 +37,84 @@ namespace Fridge_app.Services
             var productsString = FormatProductsForPrompt(storedProducts);
             var cookingToolsString = string.Join(", ", cookingTools.Select(ct=>ct.ToString()));
 
-        var prompt = $$"""
-        Na podstawie tych składników:
-        {{productsString}}
-        I tych narzędzi:
-        {{cookingTools}}
+            var prompt = $$"""
+            Na podstawie poniższych danych wygeneruj propozycję posiłku w formacie **czystego JSON** zgodnego ze schematem.
 
-        Wygeneruj posiłek w formacie JSON według schematu:
-        {
-            "Description": "string",
-            "Calories": number,
-            "Category": "string",
-            "Recipe": {
-                "Name": "string",
-                "Difficulty": "string",
-                "CreatedAt": "yyyy-MM-ddTHH:mm:ss",
-                "Ingridients": [ { "ProductId": number, "Amount": number } ],
-                "Steps": [ { "StepNumber": number, "Instruction": "string", "StepTime": number } ],
-                "CookingTools": [ { "Id": number, "Name": "string" } ]
-            },
-            "SelectedProducts": [
-                { "ProductId": number, "Amount": number }
-            ]
-        }
+            **Składniki (produkty z lodówki):**
+            {{productsString}}
 
+            **Dostępne narzędzia kuchenne:**
+            {{cookingToolsString}}
 
-        Zasady:
-        - Odpowiedź musi być CZYSTYM JSON bez dodatkowego tekstu
-        - Używaj podwójnych cudzysłowów dla wszystkich wartości tekstowych
-        - Difficulty może przyjmować tylko wartości: Easy, Medium, Hard
-        - Category może przyjmować tylko wartości: Breakfast, Lunch, Dinner, Snack, Other
-        - Amount podawaj w gramach/mililitrach
-        - Kalorie dla CAŁEGO posiłku
+            ---
 
-        Przykład poprawnej odpowiedzi:
-        {
-            "Description": "Sałatka z kurczakiem",
-            "Calories": 650,
-            "Category": "Lunch",
-            "Recipe": {
-                "TimePrep": 25,
-                "MakingSteps": "1. Pokrój kurczaka...",
-                "Difficulty": "Medium"
-            },
-            "SelectedProducts": [
-                {"ProductId": 123, "Amount": 200},
-                {"ProductId": 456, "Amount": 150}
-            ]
-        }
-        """;
+            Wygeneruj obiekt JSON zgodny ze schematem:
+            {
+                "Description": "string",
+                "Calories": number,
+                "Category": "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Other",
+                "Recipe": {
+                    "Name": "string",
+                    "Difficulty": "Easy" | "Medium" | "Hard",
+                    "CreatedAt": "yyyy-MM-ddTHH:mm:ss",
+                    "Ingridients": [
+                        { "ProductId": number, "Amount": number }
+                    ],
+                    "Steps": [
+                        { "StepNumber": number, "Instruction": "string", "StepTime": number }
+                    ],
+                    "CookingTools": [
+                        { "Id": number, "Name": "string" }
+                    ]
+                },
+                "SelectedProducts": [
+                    { "ProductId": number, "Amount": number }
+                ]
+            }
+
+            ---
+
+            ### Zasady:
+            - **Odpowiedź MUSI być czystym JSON-em** – bez komentarzy, opisu, ani dodatkowego tekstu.
+            - **Wszystkie wartości tekstowe w podwójnych cudzysłowach.**
+            - **Difficulty**: tylko `"Easy"`, `"Medium"`, `"Hard"`.
+            - **Category**: tylko `"Breakfast"`, `"Lunch"`, `"Dinner"`, `"Snack"`, `"Other"`.
+            - **Amount** podawaj w gramach lub mililitrach (bez jednostek, tylko liczba).
+            - Używaj składników tylko z listy produktów.
+            - Narzędzia ogranicz do tych dostępnych w sekcji „Dostępne narzędzia kuchenne”.
+            - Czas (`StepTime`) w minutach.
+            - `CreatedAt` ustaw na bieżącą datę.
+
+            ---
+
+            ### Przykład poprawnego formatu:
+            {
+                "Description": "Sałatka z kurczakiem i warzywami",
+                "Category": "Lunch",
+                "Recipe": {
+                    "Name": "Sałatka z kurczakiem",
+                    "Difficulty": "Medium",
+                    "CreatedAt": "2025-10-22T15:00:00",
+                    "Ingridients": [
+                        { "ProductId": 1, "Amount": 200 },
+                        { "ProductId": 2, "Amount": 100 }
+                    ],
+                    "Steps": [
+                        { "StepNumber": 1, "Instruction": "Pokrój kurczaka w kostkę i podsmaż.", "StepTime": 10 },
+                        { "StepNumber": 2, "Instruction": "Dodaj warzywa i wymieszaj z sosem.", "StepTime": 5 }
+                    ],
+                    "CookingTools": [
+                        { "Id": 1, "Name": "Patelnia" },
+                        { "Id": 2, "Name": "Miska" }
+                    ]
+                },
+                "SelectedProducts": [
+                    { "ProductId": 1, "Amount": 200 },
+                    { "ProductId": 2, "Amount": 100 }
+                ]
+            }
+            """;
+
 
             try
             {

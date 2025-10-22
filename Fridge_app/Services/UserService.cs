@@ -19,6 +19,7 @@ public class UserService
                 .Include(u => u.Fridge)
                     .ThenInclude(sp => sp.Product)
                 .Include(u => u.Diet)
+                .Include(u=>u.CookingTools)
         );
     }
     public async Task<User> GetUserByEmailAsync(string email)
