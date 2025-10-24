@@ -1,0 +1,104 @@
+/* Pe³noekranowe t³o wideo */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* G³ówne t³o z wideo */
+.welcome-container {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Wideo jako t³o */
+.background-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(calc(-50% - 20px), -50%) scale(1.02);
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.7); /* lekko przyciemnia t³o, ¿eby tekst by³ czytelny */
+}
+
+/* Wyœrodkowana treœæ na œrodku ekranu */
+.welcome-content {
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    padding: 2rem;
+}
+
+/* Tytu³ */
+.welcome-title {
+    font-size: 5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+/* Opis */
+.welcome-text {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Przyciski */
+.welcome-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-login, .btn-register {
+    padding: 0.8rem 1.6rem;
+    font-size: 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 2s ease;
+    cursor: pointer;
+}
+
+/* Kolory przycisków */
+.btn-login {
+    background-color: rgba(255, 255, 255, 0.85);
+    color: #333;
+}
+
+.btn-register {
+    background-color: rgba(212, 207, 193, 0.85);
+    color: #333;
+}
+
+    /* Hover efekty */
+    .btn-login:hover, .btn-register:hover {
+        transform: scale(1.05);
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+/* Ukrycie zawartoœci przed animacj¹ */
+.welcome-content {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease;
+}
+
+    /* Po dodaniu klasy 'visible' element siê pojawia */
+    .welcome-content.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
