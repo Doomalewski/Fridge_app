@@ -1,4 +1,4 @@
-/* Pe≥noekranowe t≥o wideo */
+Ôªø/* Pe≈Çnoekranowe t≈Ço wideo */
 body, html {
     margin: 0;
     padding: 0;
@@ -8,7 +8,7 @@ body, html {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* G≥Ûwne t≥o z wideo */
+/* G≈Ç√≥wne t≈Ço z wideo */
 .welcome-container {
     position: relative;
     height: 100vh;
@@ -19,7 +19,7 @@ body, html {
     overflow: hidden;
 }
 
-/* Wideo jako t≥o */
+/* Wideo jako t≈Ço */
 .background-video {
     position: fixed;
     top: 50%;
@@ -29,10 +29,10 @@ body, html {
     transform: translate(calc(-50% - 20px), -50%) scale(1.02);
     object-fit: cover;
     z-index: -1;
-    filter: brightness(0.7); /* lekko przyciemnia t≥o, øeby tekst by≥ czytelny */
+    filter: brightness(0.7); /* lekko przyciemnia t≈Ço, ≈ºeby tekst by≈Ç czytelny */
 }
 
-/* Wyúrodkowana treúÊ na úrodku ekranu */
+/* Wy≈õrodkowana tre≈õƒá na ≈õrodku ekranu */
 .welcome-content {
     z-index: 2;
     display: flex;
@@ -45,7 +45,7 @@ body, html {
     padding: 2rem;
 }
 
-/* Tytu≥ */
+/* Tytu≈Ç */
 .welcome-title {
     font-size: 5rem;
     font-weight: bold;
@@ -74,7 +74,7 @@ body, html {
     cursor: pointer;
 }
 
-/* Kolory przyciskÛw */
+/* Kolory przycisk√≥w */
 .btn-login {
     background-color: rgba(255, 255, 255, 0.85);
     color: #333;
@@ -90,15 +90,70 @@ body, html {
         transform: scale(1.05);
         background-color: rgba(255, 255, 255, 0.95);
     }
-/* Ukrycie zawartoúci przed animacjπ */
+/* Ukrycie zawarto≈õci przed animacjƒÖ */
 .welcome-content {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 1s ease, transform 1s ease;
 }
 
-    /* Po dodaniu klasy 'visible' element siÍ pojawia */
+    /* Po dodaniu klasy 'visible' element siƒô pojawia */
     .welcome-content.visible {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(-30%);
     }
+
+
+/* Efekt przej≈õcia */
+#fadeOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+    #fadeOverlay.active {
+        opacity: 0.1;
+    }
+
+/* üîß Efekt przybli≈ºenia kamery */
+.background-video.camera-up {
+    animation: cameraZoom 2.8s ease-in-out forwards;
+}
+
+@keyframes cameraZoom {
+    0% {
+        transform: translateX(-50%) translateY(-50%) scale(1);
+        filter: brightness(0.7);
+    }
+
+    100% {
+        transform: translateX(-50%) translateY(-50%) scale(1.3);
+        filter: brightness(1);
+        opacity: 0.01;
+    }
+}
+
+
+/* üîß Zanikanie napis√≥w podczas przej≈õcia */
+.welcome-content.content-fade-out {
+    animation: fadeTextOut 1.5s ease forwards;
+}
+
+@keyframes fadeTextOut {
+    0% {
+        opacity: 1;
+        transform: translateY(-30%);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-30%);
+    }
+}

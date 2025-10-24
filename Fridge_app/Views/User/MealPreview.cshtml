@@ -31,7 +31,12 @@
                 <p><strong>Kategoria:</strong> @Model.Category</p>
                 <p><strong>Poziom trudności:</strong> @Model.Recipe.Difficulty</p>
                 <p><strong>Nazwa przepisu:</strong> @Model.Recipe.Name</p>
+                <p>
+                    <strong>Całkowity czas przygotowania:</strong>
+                    @(Model.Recipe.Steps?.Sum(s => s.StepTime) ?? 0) min
+                </p>
             </div>
+
         </div>
 
         <div class="card shadow-sm mb-4">
