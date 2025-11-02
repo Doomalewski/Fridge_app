@@ -19,6 +19,9 @@ namespace Fridge_app.Models
         public string Category { get; set; }
 
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();
-    }
 
+        public int UserId { get; set; }
+        [ForeignKey("UserId")]
+        public User User { get; set; }
+    }
 }

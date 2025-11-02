@@ -1,14 +1,14 @@
 ﻿@model Fridge_app.Models.ViewModels.MealCreateViewModel
 
 @{
-    ViewData["Title"] = "Proponowany przepis";
+    ViewData["Title"] = "Podgląd posiłku";
 }
 
 <div class="container mt-4">
     <h2 class="mb-3">@Model.Description</h2>
 
     <form asp-action="SaveMeal" method="post">
-        <!-- Ukryte pola potrzebne do zapisania -->
+        <!-- Ukryte pola podstawowe -->
         <input type="hidden" asp-for="Description" />
         <input type="hidden" asp-for="Calories" />
         <input type="hidden" asp-for="Category" />
@@ -16,12 +16,37 @@
         <input type="hidden" asp-for="Recipe.Difficulty" />
         <input type="hidden" asp-for="Recipe.CreatedAt" />
 
-        @for (var i = 0; i < Model.SelectedProducts.Count; i++)
+        <!-- ✅ Składniki -->
+        @if (Model.Recipe?.Ingridients != null && Model.Recipe.Ingridients.Any())
         {
-            <input type="hidden" asp-for="SelectedProducts[i].ProductId" />
-            <input type="hidden" asp-for="SelectedProducts[i].Amount" />
+            for (var i = 0; i < Model.Recipe.Ingridients.Count; i++)
+            {
+                <input type="hidden" name="Recipe.Ingridients[@i].ProductId" value="@Model.Recipe.Ingridients[i].ProductId" />
+                <input type="hidden" name="Recipe.Ingridients[@i].Amount" value="@Model.Recipe.Ingridients[i].Amount" />
+            }
         }
 
+        <!-- ✅ Narzędzia kuchenne -->
+        @if (Model.Recipe?.CookingTools != null && Model.Recipe.CookingTools.Any())
+        {
+            for (var i = 0; i < Model.Recipe.CookingTools.Count; i++)
+            {
+                <input type="hidden" name="Recipe.CookingTools[@i].Name" value="@Model.Recipe.CookingTools[i].Name" />
+            }
+        }
+
+        <!-- ✅ Kroki -->
+        @if (Model.Recipe?.Steps != null && Model.Recipe.Steps.Any())
+        {
+            for (var i = 0; i < Model.Recipe.Steps.Count; i++)
+            {
+                <input type="hidden" name="Recipe.Steps[@i].StepNumber" value="@Model.Recipe.Steps[i].StepNumber" />
+                <input type="hidden" name="Recipe.Steps[@i].Instruction" value="@Model.Recipe.Steps[i].Instruction" />
+                <input type="hidden" name="Recipe.Steps[@i].StepTime" value="@Model.Recipe.Steps[i].StepTime" />
+            }
+        }
+
+        <!-- Informacje o posiłku -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h4 class="mb-0">Informacje o posiłku</h4>
@@ -34,6 +59,7 @@
             </div>
         </div>
 
+        <!-- Składniki -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h4 class="mb-0">Składniki</h4>
@@ -44,7 +70,8 @@
                     <ul class="list-group list-group-flush">
                         @foreach (var ing in Model.Recipe.Ingridients)
                         {
-                            var productName = Model.AvailableProducts.FirstOrDefault(p => p.Id == ing.ProductId)?.Name ?? "Nieznany produkt";
+                            var productName = Model.AvailableProducts
+                            .FirstOrDefault(p => p.Id == ing.ProductId)?.Name ?? "Nieznany produkt";
                             <li class="list-group-item">
                                 <strong>@productName</strong> — @ing.Amount g
                             </li>
@@ -58,6 +85,7 @@
             </div>
         </div>
 
+        <!-- Kroki przygotowania -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h4 class="mb-0">Kroki przygotowania</h4>
@@ -82,6 +110,7 @@
             </div>
         </div>
 
+        <!-- Narzędzia -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
                 <h4 class="mb-0">Narzędzia kuchenne</h4>

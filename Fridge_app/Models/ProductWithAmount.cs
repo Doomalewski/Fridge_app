@@ -20,5 +20,12 @@ namespace Fridge_app.Models
         [ForeignKey("RecipeId")]
         public Recipe Recipe { get; set; }
     }
+    public class ProductWithAmountViewModel
+    {
+        [Required]
+        public int ProductId { get; set; }
 
+        [Range(0.01, double.MaxValue, ErrorMessage = "Ilość musi być większa niż 0")]
+        public double Amount { get; set; }
+    }
 }

@@ -56,15 +56,20 @@ namespace Fridge_app.Services
             try
             {
                 await _recipeRepository.AddAsync(recipe);
+                await _context.SaveChangesAsync(); // Ustawia recipe.Id
 
                 foreach (var product in products)
                 {
+                    product.Id = 0; // Ustawienie Id na 0, aby baza wygenerowała nowy klucz
                     product.RecipeId = recipe.Id;
                     await _productAmountRepository.AddAsync(product);
                 }
 
+                await _context.SaveChangesAsync(); // Zapisuje produkty
+
                 meal.RecipeId = recipe.Id;
                 await _mealRepository.AddAsync(meal);
+                await _context.SaveChangesAsync(); // Zapisuje posiłek
 
                 await transaction.CommitAsync();
             }
@@ -74,6 +79,7 @@ namespace Fridge_app.Services
                 throw;
             }
         }
+
 
 
         public async Task UpdateMealAsync(Meal meal)

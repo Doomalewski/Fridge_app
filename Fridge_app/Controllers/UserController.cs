@@ -128,56 +128,109 @@ public class UserController : Controller
         }
     }
     [HttpPost]
-    public async Task<IActionResult> SaveMeal([Bind("Description,Calories,Category,Recipe,SelectedProducts")] MealCreateViewModel model)
+    public async Task<IActionResult> SaveMeal([Bind("Description,Calories,Category,Tags,Recipe,SelectedProducts")] MealCreateViewModel model)
     {
         try
         {
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Nieprawidłowe dane przepisu";
+                TempData["Error"] = "Nieprawidłowe dane przepisu.";
                 return RedirectToAction("Dashboard");
             }
 
-            // Mapowanie do modelu domenowego
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var user = await _userService.GetUserByIdAsync(userId);
+
+            // Tworzymy nowy posiłek
             var meal = new Meal
             {
                 Description = model.Description,
                 Category = model.Category,
+                Tags = model.Tags,
+                UserId = userId
             };
 
+            // Tworzymy nowy przepis
             var recipe = new Recipe
             {
-                Name = model.Recipe.Name,
-                Difficulty = model.Recipe.Difficulty,
-                CreatedAt = model.Recipe.CreatedAt,
-                Ingridients = model.Recipe.Ingridients,
-                Steps = model.Recipe.Steps,
-                CookingTools = model.Recipe.CookingTools
+                Name = model.Recipe?.Name ?? "Bez nazwy",
+                Difficulty = model.Recipe?.Difficulty ?? "Nieokreślony",
+                CreatedAt = model.Recipe?.CreatedAt ?? DateTime.Now
             };
 
-
-            var products = new List<ProductWithAmount>();
-            foreach (var selectedProduct in model.SelectedProducts)
+            // ✅ SKŁADNIKI (Ingridients)
+            if (model.Recipe?.Ingridients != null && model.Recipe.Ingridients.Any())
             {
-                // Weryfikacja istnienia produktu
-                var productExists = await _context.Products
-                    .AnyAsync(p => p.Id == selectedProduct.ProductId);
-
-                if (!productExists)
+                foreach (var ing in model.Recipe.Ingridients)
                 {
-                    TempData["Error"] = $"Produkt o ID {selectedProduct.ProductId} nie istnieje";
-                    return RedirectToAction("Dashboard");
+                    var product = await _context.Products.FindAsync(ing.ProductId);
+                    if (product != null)
+                    {
+                        recipe.Ingridients.Add(new ProductWithAmount
+                        {
+                            ProductId = product.Id,
+                            Amount = ing.Amount,
+                            Product = product
+                        });
+                    }
                 }
-
-                products.Add(new ProductWithAmount
+            }
+            else if (model.SelectedProducts != null && model.SelectedProducts.Any())
+            {
+                // Alternatywnie — jeśli dane pochodzą z SelectedProducts
+                foreach (var selectedProduct in model.SelectedProducts)
                 {
-                    ProductId = selectedProduct.ProductId,
-                    Amount = selectedProduct.Amount
-                });
+                    var product = await _context.Products.FindAsync(selectedProduct.ProductId);
+                    if (product != null)
+                    {
+                        recipe.Ingridients.Add(new ProductWithAmount
+                        {
+                            ProductId = product.Id,
+                            Amount = selectedProduct.Amount,
+                            Product = product
+                        });
+                    }
+                }
             }
 
-            // Wywołanie serwisu
-            await _mealService.CreateMealAsync(meal, recipe, products);
+            // ✅ KROKI (Steps)
+            if (model.Recipe?.Steps != null && model.Recipe.Steps.Any())
+            {
+                foreach (var step in model.Recipe.Steps)
+                {
+                    recipe.Steps.Add(new RecipeStep
+                    {
+                        StepNumber = step.StepNumber,
+                        Instruction = step.Instruction,
+                        StepTime = step.StepTime
+                    });
+                }
+            }
+
+            // ✅ NARZĘDZIA KUCHENNE (CookingTools)
+            if (model.Recipe?.CookingTools != null && model.Recipe.CookingTools.Any())
+            {
+                foreach (var tool in model.Recipe.CookingTools)
+                {
+                    if (string.IsNullOrWhiteSpace(tool.Name))
+                        continue;
+
+                    var dbTool = await _context.CookingTools
+                        .FirstOrDefaultAsync(t => t.Name.ToLower() == tool.Name.ToLower());
+
+                    if (dbTool == null)
+                    {
+                        dbTool = new CookingTool { Name = tool.Name };
+                        _context.CookingTools.Add(dbTool);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    recipe.CookingTools.Add(dbTool);
+                }
+            }
+
+            // ✅ Zapisujemy cały posiłek z przepisem i składnikami
+            await _mealService.CreateMealAsync(meal, recipe, recipe.Ingridients);
 
             TempData["Success"] = "Przepis został pomyślnie zapisany!";
             return RedirectToAction("MealDetails", new { id = meal.Id });
@@ -188,4 +241,6 @@ public class UserController : Controller
             return RedirectToAction("Dashboard");
         }
     }
+
+
 }
