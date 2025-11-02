@@ -32,3 +32,13 @@ input[type="number"] {
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
+.link-primary {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+    .link-primary:hover {
+        text-decoration: underline;
+        color: #0056b3;
+    }

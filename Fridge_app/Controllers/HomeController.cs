@@ -24,13 +24,21 @@ namespace Fridge_app.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+                {
+                    _logger.LogWarning("Nie uda³o siê odczytaæ Id u¿ytkownika z Claims");
+                    return RedirectToAction("Logout", "User"); // lub inna logika
+                }
+
                 var user = await _userService.GetUserByIdAsync(userId);
-                return View(user);
+                // Renderuje widok dla zalogowanego u¿ytkownika
+                return View("HomeAuthenticated", user);
             }
-            return View();
+
+            // Renderuje widok dla goœcia
+            return View("HomeGuest");
         }
 
         public IActionResult Privacy()

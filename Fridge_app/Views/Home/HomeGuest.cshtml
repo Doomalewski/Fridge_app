@@ -1,0 +1,98 @@
+﻿@model Fridge_app.Models.User
+@{
+    ViewData["Title"] = "Home Page";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/HomeGuest.css" />
+    <style>
+        nav.navbar {
+            display: none !important;
+        }
+
+        footer {
+            display: none !important;
+        }
+    </style>
+}
+
+<div class="welcome-container">
+    <video id="backgroundVideo" muted playsinline preload="auto" class="background-video">
+        <source src="~/media/WelcomeVideo.mp4" type="video/mp4" />
+        Twoja przeglądarka nie obsługuje wideo HTML5.
+    </video>
+
+    <audio id="backgroundAudio" loop>
+        <source src="~/media/welcome-audio.mp3" type="audio/mpeg" />
+    </audio>
+
+    <div class="welcome-content">
+        <h1 class="welcome-title">Welcome to FridgeIO</h1>
+        <p class="welcome-text">Zaloguj się, aby zarządzać swoją lodówką i przepisami</p>
+        <div class="welcome-buttons">
+            <a asp-controller="User" asp-action="Login" class="btn btn-login">Logowanie</a>
+            <a asp-controller="User" asp-action="Register" class="btn btn-register">Rejestracja</a>
+        </div>
+    </div>
+    <div id="fadeOverlay"></div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const video = document.getElementById("backgroundVideo");
+            const audio = document.getElementById("backgroundAudio");
+            audio.volume = 0.1;
+            const content = document.querySelector(".welcome-content");
+            const overlay = document.getElementById("fadeOverlay");
+
+            video.load();
+
+            // Start animacji po pierwszym kliknięciu
+            document.body.addEventListener("click", function () {
+                video.play().catch(err => console.log("Autoplay wideo zablokowany:", err));
+                audio.play().catch(err => console.log("Autoplay audio zablokowany:", err));
+
+                setTimeout(() => {
+                    content.classList.add("visible");
+                }, 3000);
+            }, { once: true });
+
+            // Kliknięcie w przycisk -> animacja przejścia
+            document.querySelectorAll(".welcome-buttons a").forEach(link => {
+                link.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    fadeOutVideoAndAudio(() => {
+                        window.location.href = this.href;
+                    });
+                });
+            });
+
+                    function fadeOutVideoAndAudio(callback) {
+            overlay.classList.add("active");
+            video.classList.add("camera-up");
+            content.classList.add("content-fade-out");
+
+            let volume = audio.volume; // np. 1
+            const fadeDuration = 4000; // czas w ms
+            const fadeInterval = 50; // co ile ms zmieniamy głośność
+            const step = volume / (fadeDuration / fadeInterval);
+
+            const fade = setInterval(() => {
+                if (volume > 0) {
+                    volume -= step;
+                    if (volume < 0) volume = 0;
+                    audio.volume = volume;
+                } else {
+                    clearInterval(fade);
+                    audio.pause();
+                }
+            }, fadeInterval);
+
+            setTimeout(() => {
+                callback();
+            }, fadeDuration);
+        }
+
+        });
+    </script>
+}
