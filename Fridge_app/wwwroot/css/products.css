@@ -1,0 +1,94 @@
+﻿/* === Wrapper strony produktów === */
+.home-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem 1.5rem;
+    background: #f7f9fb;
+    border-radius: 1.3rem;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.05);
+}
+
+/* === Tabela produktów === */
+.product-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+    background: transparent;
+}
+
+    .product-table thead th {
+        background-color: #0d6efd;
+        color: #fff;
+        border: none;
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .product-table tbody tr {
+        background-color: #ffffff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .product-table tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        }
+
+    .product-table td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+    }
+
+/* === Przycisk minimalistyczny === */
+.btn-outline-warning, .btn-outline-info, .btn-outline-danger {
+    border-radius: 0.7rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.35rem 0.9rem;
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-warning:hover {
+        background: #ffc107;
+        color: #fff;
+        border-color: #ffc107;
+    }
+
+    .btn-outline-info:hover {
+        background: #0dcaf0;
+        color: #fff;
+        border-color: #0dcaf0;
+    }
+
+    .btn-outline-danger:hover {
+        background: #dc3545;
+        color: #fff;
+        border-color: #dc3545;
+    }
+
+/* === Nav Tabs === */
+.nav-tabs .nav-link {
+    color: #0d6efd;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+    .nav-tabs .nav-link.active {
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+/* === Input wyszukiwania === */
+.input-group-text {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+}
+
+.input-group .form-control {
+    border-radius: 0.5rem;
+}

@@ -1,0 +1,204 @@
+﻿/* === Globalne ustawienia === */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Tło jako obraz powielany */
+    background-image: url('/images/SiteBG.jpg'); /* podaj własną ścieżkę do obrazka */
+    background-repeat: repeat; /* powtarzanie obrazu w poziomie i pionie */
+    background-size: auto; /* oryginalny rozmiar obrazka */
+    background-position: top left; /* początek powielania od lewego górnego rogu */
+
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: top;
+    justify-content: center;
+}
+
+/* === Wrapper lodówki === */
+.home-wrapper {
+    position: relative;
+    border-radius: 1.5rem;
+    padding: 3rem 2rem 5rem 2rem;
+    /* Grube ściany lodówki */
+    border: 4px solid #d1d1d1;
+    /* Cienie dla głębi */
+    box-shadow: inset 0 10px 25px rgba(0,0,0,0.06), 0 12px 35px rgba(0,0,0,0.12);
+    /* Tło – powielane półki w pionie */
+    background-image: url('/images/fridgebg.jpg'); /* obraz jednej półki */
+    background-size: 100% 270px; /* wysokość jednej półki */
+    background-repeat: repeat-y; /* powtarzanie w pionie */
+    background-position: top center;
+    color: #222;
+    z-index: 1;
+    overflow: hidden;
+}
+
+    /* Overlay dla lepszej czytelności produktów */
+    .home-wrapper::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.25); /* półprzezroczysty biały overlay */
+        border-radius: 1.5rem;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+/* === Sekcja powitania === */
+.home-header {
+    margin-bottom: 3rem;
+    background: rgba(240, 247, 255, 0.9); /* lekko przezroczysty */
+    border-radius: 1.5rem;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #d1d1d1;
+    z-index: 1;
+}
+
+.welcome-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.welcome-icon {
+    font-size: 2.5rem;
+    color: #007bff;
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+.welcome-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+.welcome-subtitle {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0;
+}
+
+/* === Siatka produktów na półkach === */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding-top: 20px; /* odstęp od górnej półki */
+    position: relative;
+    z-index: 1; /* nad overlay */
+}
+
+/* === Kafelki produktów === */
+.dashboard-card {
+    background: rgba(255,255,255,0.85); /* lekko przezroczysty */
+    border-radius: 1.5rem;
+    padding: 1.8rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s ease;
+    height: 200px; /* dopasowane do wysokości półki */
+    border: 1px solid #d1d1d1;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    }
+
+/* === Treść kafelka === */
+.card-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 0.8rem; /* trochę większy odstęp */
+    padding-bottom: 0.3rem; /* miejsce na linię */
+    border-bottom: 2px solid #666; /* cieniutka, subtelna linia */
+}
+
+
+.card-content p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.3rem;
+}
+
+/* === Minimalistyczne przyciski === */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.5rem 1.3rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+
+.btn-outline-dark {
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 0.7rem;
+    color: #333;
+    padding: 0.4rem 1.2rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-dark:hover {
+        background: #333;
+        color: #fff;
+    }
+
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.4rem 1.2rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .btn-danger:hover {
+        background-color: #a71d2a;
+        transform: scale(1.05);
+    }
+
+/* === Animacje === */
+@keyframes fadeInPage {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatIcon {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}

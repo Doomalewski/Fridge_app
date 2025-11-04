@@ -3,12 +3,17 @@
 @{
     ViewData["Title"] = "Podgląd posiłku";
 }
+<link rel="stylesheet" href="~/css/mealprev.css" />
 
-<div class="container mt-4">
-    <h2 class="mb-3">@Model.Description</h2>
+
+<div class="meal-preview-wrapper">
+    <div class="meal-header">
+        <h1 class="meal-title">@Model.Description</h1>
+        <p class="meal-subtitle">Smacznego :)</p>
+    </div>
 
     <form asp-action="SaveMeal" method="post">
-        <!-- Ukryte pola podstawowe -->
+        <!-- Ukryte pola do zapisu -->
         <input type="hidden" asp-for="Description" />
         <input type="hidden" asp-for="Calories" />
         <input type="hidden" asp-for="Category" />
@@ -16,8 +21,7 @@
         <input type="hidden" asp-for="Recipe.Difficulty" />
         <input type="hidden" asp-for="Recipe.CreatedAt" />
 
-        <!-- ✅ Składniki -->
-        @if (Model.Recipe?.Ingridients != null && Model.Recipe.Ingridients.Any())
+        @if (Model.Recipe?.Ingridients != null)
         {
             for (var i = 0; i < Model.Recipe.Ingridients.Count; i++)
             {
@@ -26,8 +30,7 @@
             }
         }
 
-        <!-- ✅ Narzędzia kuchenne -->
-        @if (Model.Recipe?.CookingTools != null && Model.Recipe.CookingTools.Any())
+        @if (Model.Recipe?.CookingTools != null)
         {
             for (var i = 0; i < Model.Recipe.CookingTools.Count; i++)
             {
@@ -35,8 +38,7 @@
             }
         }
 
-        <!-- ✅ Kroki -->
-        @if (Model.Recipe?.Steps != null && Model.Recipe.Steps.Any())
+        @if (Model.Recipe?.Steps != null)
         {
             for (var i = 0; i < Model.Recipe.Steps.Count; i++)
             {
@@ -46,40 +48,28 @@
             }
         }
 
-        <!-- Informacje o posiłku -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h4 class="mb-0">Informacje o posiłku</h4>
-            </div>
-            <div class="card-body">
+        <div class="meal-grid">
+            <!-- Informacje o posiłku -->
+            <div class="meal-card animate">
+                <h3>Informacje o posiłku</h3>
                 <p><strong>Kalorie:</strong> @Model.Calories kcal</p>
                 <p><strong>Kategoria:</strong> @Model.Category</p>
                 <p><strong>Poziom trudności:</strong> @Model.Recipe.Difficulty</p>
                 <p><strong>Nazwa przepisu:</strong> @Model.Recipe.Name</p>
-                <p>
-                    <strong>Całkowity czas przygotowania:</strong>
-                    @(Model.Recipe.Steps?.Sum(s => s.StepTime) ?? 0) min
-                </p>
+                <p><strong>Całkowity czas przygotowania:</strong> @(Model.Recipe.Steps?.Sum(s => s.StepTime) ?? 0) min</p>
             </div>
 
-        </div>
-
-        <!-- Składniki -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h4 class="mb-0">Składniki</h4>
-            </div>
-            <div class="card-body">
+            <!-- Składniki -->
+            <div class="meal-card animate">
+                <h3>Składniki</h3>
                 @if (Model.Recipe.Ingridients?.Any() == true)
                 {
-                    <ul class="list-group list-group-flush">
+                    <ul class="ingredient-list">
                         @foreach (var ing in Model.Recipe.Ingridients)
                         {
                             var productName = Model.AvailableProducts
                             .FirstOrDefault(p => p.Id == ing.ProductId)?.Name ?? "Nieznany produkt";
-                            <li class="list-group-item">
-                                <strong>@productName</strong> — @ing.Amount g
-                            </li>
+                            <li>@productName — @ing.Amount g</li>
                         }
                     </ul>
                 }
@@ -88,22 +78,18 @@
                     <p class="text-muted">Brak składników do wyświetlenia.</p>
                 }
             </div>
-        </div>
 
-        <!-- Kroki przygotowania -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h4 class="mb-0">Kroki przygotowania</h4>
-            </div>
-            <div class="card-body">
+            <!-- Kroki przygotowania -->
+            <div class="meal-card animate">
+                <h3>Kroki przygotowania</h3>
                 @if (Model.Recipe.Steps?.Any() == true)
                 {
-                    <ol class="list-group list-group-numbered">
+                    <ol class="step-list">
                         @foreach (var step in Model.Recipe.Steps.OrderBy(s => s.StepNumber))
                         {
-                            <li class="list-group-item">
-                                <p class="mb-1">@step.Instruction</p>
-                                <small class="text-muted">Czas: @step.StepTime min</small>
+                            <li>
+                                <p>@step.Instruction</p>
+                                <small>@step.StepTime min</small>
                             </li>
                         }
                     </ol>
@@ -113,22 +99,18 @@
                     <p class="text-muted">Brak kroków przygotowania.</p>
                 }
             </div>
-        </div>
 
-        <!-- Narzędzia -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h4 class="mb-0">Narzędzia kuchenne</h4>
-            </div>
-            <div class="card-body">
+            <!-- Narzędzia kuchenne -->
+            <div class="meal-card animate">
+                <h3>Narzędzia kuchenne</h3>
                 @if (Model.Recipe.CookingTools?.Any() == true)
                 {
-                    <ul class="list-inline">
+                    <div class="tools-list">
                         @foreach (var tool in Model.Recipe.CookingTools)
                         {
-                            <li class="list-inline-item badge bg-secondary p-2 m-1">@tool.Name</li>
+                            <span>@tool.Name</span>
                         }
-                    </ul>
+                    </div>
                 }
                 else
                 {
@@ -138,9 +120,22 @@
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> Zapisz przepis
+            <button type="submit" class="meal-btn">
+                <i class="bi bi-save"></i> Zapisz przepis
             </button>
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible'); // animacja wjazdu + animacja linii
+                }, index * 150);
+            });
+        });
+    </script>
+}

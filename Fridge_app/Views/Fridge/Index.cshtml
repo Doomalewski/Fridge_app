@@ -3,58 +3,57 @@
 @{
     ViewData["Title"] = "Twoja lodówka";
 }
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Witaj, @User.Identity.Name!</h2>
-    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productSearchModal">
+<link rel="stylesheet" href="~/css/fridge.css" />
+<div class="home-header mb-4 d-flex justify-content-between align-items-center">
+    <div class="welcome-box">
+        <i class="welcome-icon bi bi-box-seam"></i>
+        <div>
+            <h2 class="welcome-title">Witaj, Oto twoja lodówka.</h2>
+            <p class="welcome-subtitle">Dodawaj i zarządzaj produktami do woli.</p>
+        </div>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productSearchModal">
         <i class="bi bi-plus-circle"></i> Dodaj produkt
     </button>
 </div>
+<div class="home-wrapper">
+    
 
-<div class="row row-cols-1 row-cols-md-3 g-4" id="fridgeItems">
-    @foreach (var item in Model.Fridge)
-    {
-        <div class="col">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">@item.Product.Name</h5>
-                    <div class="card-text">
-                        <div>Ilość: @item.Quantity @item.Product.Unit</div>
-                        <div>Ważny do: @item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</div>
-                    </div>
-                    <div class="mt-3">
-                        <button class="btn btn-primary btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editModal"
-                                data-id="@item.Id"
-                                data-quantity="@item.Quantity"
-                                data-unit="@item.Product.Unit">
-                            Edytuj
-                        </button>
-                        <button class="btn btn-danger btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#deleteModal"
-                                data-id="@item.Id"
-                                data-name="@item.Product.Name">
-                            Usuń
-                        </button>
-                    </div>
+    <div class="dashboard-grid">
+        @foreach (var item in Model.Fridge)
+        {
+            <div class="dashboard-card visible">
+                <div class="card-content">
+                    <h3>@item.Product.Name</h3>
+                    <p>Ilość: <strong>@item.Quantity @item.Product.Unit</strong></p>
+                    <p>Ważny do: <strong>@item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
+                </div>
+                <div class="mt-auto d-flex justify-content-between pt-3">
+                    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#editModal" data-id="@item.Id"
+                            data-quantity="@item.Quantity" data-unit="@item.Product.Unit">
+                        Edytuj
+                    </button>
+                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#deleteModal" data-id="@item.Id" data-name="@item.Product.Name">
+                        Usuń
+                    </button>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
 
-<form asp-controller="User" asp-action="GenerateMeal" method="post">
-    <button type="submit" class="btn btn-primary mt-3">
-        <i class="fas fa-magic"></i> Wygeneruj przepis
-    </button>
-</form>
+    <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Wygeneruj przepis
+        </button>
+    </form>
+</div>
 
 <!-- Modal edycji -->
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content rounded-3 shadow-sm">
             <div class="modal-header">
                 <h5 class="modal-title">Edytuj produkt</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -80,7 +79,7 @@
 <!-- Modal usuwania -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content rounded-3 shadow-sm">
             <div class="modal-header">
                 <h5 class="modal-title">Potwierdź usunięcie</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -122,37 +121,37 @@
         // Obsługa powiadomień
         @if (TempData["Success"] != null)
         {
-            <text>
-                toastr.success('@TempData["Success"]');
-            </text>
+                <text>
+                    toastr.success('@TempData["Success"]');
+                </text>
         }
         @if (TempData["Error"] != null)
         {
-            <text>
-                toastr.error('@TempData["Error"]');
-            </text>
+                <text>
+                    toastr.error('@TempData["Error"]');
+                </text>
         }
     </script>
-    <script>
-            // Zaktualizowana funkcja wyszukiwania (case-insensitive)
-            function searchProducts() {
-                const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
-                const category = document.getElementById('searchCategory').value;
 
-                fetch(`/Home/SearchProducts?searchTerm=${encodeURIComponent(searchTerm)}&category=${category}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.text();
-                    })
-                    .then(html => {
-                        document.getElementById('searchResults').innerHTML = html;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        document.getElementById('searchResults').innerHTML =
-                            '<div class="col-12"><div class="alert alert-danger">Błąd podczas wyszukiwania</div></div>';
-                    });
-            }
+    <script>
+        // Zaktualizowana funkcja wyszukiwania (case-insensitive)
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
+            const category = document.getElementById('searchCategory').value;
+
+            fetch(`/Home/SearchProducts?searchTerm=${encodeURIComponent(searchTerm)}&category=${category}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('searchResults').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('searchResults').innerHTML = '<div class="col-12"><div class="alert alert-danger">Błąd podczas wyszukiwania</div></div>';
+                });
+        }
 
         // Funkcja wyboru produktu
         function selectProduct(productId, productName) {
@@ -194,10 +193,6 @@
                 console.error('Error:', error);
                 alert('Błąd połączenia z serwerem');
             }
-
         });
     </script>
 }
-
-
-

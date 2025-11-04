@@ -3,45 +3,77 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container min-vh-100 d-flex flex-column">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Witaj, @User.Identity.Name!</h2>
-    </div>
+<link rel="stylesheet" href="~/css/home.css" />
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">Moja lodówka</h4>
-                    <a asp-controller="Fridge" asp-action="Index" class="stretched-link text-white text-decoration-none">Zobacz</a>
-                </div>
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-snow2"></i>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">Lista produktów</h4>
-                    <a asp-controller="Product" asp-action="Index" class="stretched-link text-white text-decoration-none">Zarządzaj</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">Użytkownicy</h4>
-                    <a asp-controller="User" asp-action="Index" class="stretched-link text-white text-decoration-none">Zarządzaj</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">Statystyki</h4>
-                    <a asp-controller="Admin" asp-action="Stats" class="stretched-link text-white text-decoration-none">Przegląd</a>
-                </div>
+            <div>
+                <h1 class="welcome-title">Witaj, @User.Identity.Name!</h1>
+                <p class="welcome-subtitle">Zarządzaj swoją lodówką i produktami w nowoczesny sposób ❄️</p>
             </div>
         </div>
     </div>
 
-    @await Html.PartialAsync("_AddProductModals")
+    <div class="dashboard-grid">
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-primary-light">
+                <i class="bi bi-house-door"></i>
+            </div>
+            <div class="card-content">
+                <h3>Moja lodówka</h3>
+                <p>Zarządzaj zawartością swojej lodówki</p>
+            </div>
+            <a asp-controller="Fridge" asp-action="Index" class="card-link">Przejdź</a>
+        </div>
+
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-success-light">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div class="card-content">
+                <h3>Lista produktów</h3>
+                <p>Dodawaj i aktualizuj produkty</p>
+            </div>
+            <a asp-controller="Product" asp-action="Index" class="card-link">Zarządzaj</a>
+        </div>
+
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-warning-light">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="card-content">
+                <h3>Użytkownicy</h3>
+                <p>Przeglądaj i edytuj konta użytkowników</p>
+            </div>
+            <a asp-controller="User" asp-action="Index" class="card-link">Otwórz</a>
+        </div>
+
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-danger-light">
+                <i class="bi bi-bar-chart"></i>
+            </div>
+            <div class="card-content">
+                <h3>Statystyki</h3>
+                <p>Sprawdź swoje dane i raporty</p>
+            </div>
+            <a asp-controller="Admin" asp-action="Stats" class="card-link">Zobacz</a>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 150);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,172 @@
+﻿body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Tło jako obraz powielany */
+    background-image: url('/images/SiteBG.jpg'); /* podaj własną ścieżkę do obrazka */
+    background-repeat: repeat; /* powtarzanie obrazu w poziomie i pionie */
+    background-size: auto; /* oryginalny rozmiar obrazka */
+    background-position: top left; /* początek powielania od lewego górnego rogu */
+
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* === Ogólne tło i wrapper === */
+.meal-preview-wrapper {
+    max-width: 1000px;
+    margin: 200px auto 6rem auto;
+    padding: 3rem 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #222;
+    border-radius: 1.5rem;
+    /* tło w kolorze kremowym z liniami */
+    background: repeating-linear-gradient( to bottom, rgba(255, 250, 210, 0.95), /* kolor kartki */
+    rgba(255, 250, 210, 0.95) 29px, rgba(200, 200, 180, 0.3) 30px );
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    border: 1px solid #d1d1d1;
+}
+
+/* Opcjonalnie: lekka animacja wjazdu */
+.meal-preview-wrapper {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInWrapper 0.6s forwards ease-out;
+}
+
+@keyframes fadeInWrapper {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Header === */
+.meal-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.meal-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 0.3rem;
+}
+
+.meal-subtitle {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* === Grid === */
+.meal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* === Kafelki === */
+.meal-card {
+    background: #fff;
+    border-radius: 1.2rem;
+    padding: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(25px);
+    border: 1px solid #d1d1d1;
+}
+
+    .meal-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .meal-card:hover {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    /* === Animowana linia pod tytułem === */
+    .meal-card h3 {
+        margin-bottom: 1rem;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #111;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+        .meal-card h3::after {
+            content: "";
+            display: block;
+            width: 0;
+            height: 2px;
+            background-color: #ccc;
+            border-radius: 1px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: width 0.5s ease-out;
+        }
+
+    .meal-card.visible h3::after {
+        width: calc(100% - 0px);
+    }
+
+/* === Składniki i kroki === */
+.ingredient-list,
+.step-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+    .ingredient-list li,
+    .step-list li {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+        color: #444;
+    }
+
+        .step-list li small {
+            display: block;
+            margin-top: 0.2rem;
+            color: #888;
+        }
+
+/* === Narzędzia === */
+.tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+    .tools-list span {
+        background: #e0e0e0;
+        color: #555;
+        padding: 0.3rem 0.8rem;
+        border-radius: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+/* === Przycisk === */
+.meal-btn {
+    display: inline-block;
+    align-self: center;
+    margin-top: 1.2rem;
+    padding: 0.6rem 1.5rem;
+    background-color: #2c2c2c;
+    color: #fff;
+    border-radius: 0.8rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .meal-btn:hover {
+        background-color: #000;
+        transform: scale(1.05);
+    }
