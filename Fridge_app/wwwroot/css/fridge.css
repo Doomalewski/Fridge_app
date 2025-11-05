@@ -24,7 +24,7 @@ body {
     border-radius: 1.5rem;
     padding: 2.5rem 2rem 5rem 2rem;
     /* Grube ściany lodówki */
-    border: 4px solid #d1d1d1;
+    border: 4px solid #757575;
     /* Cienie dla głębi */
     box-shadow: inset 0 10px 25px rgba(0,0,0,0.06), 0 12px 35px rgba(0,0,0,0.12);
     /* Tło – powielane półki w pionie */

@@ -15,7 +15,9 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow fixed-top">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FridgeIO</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/Logo.png" alt="FridgeIO Logo" style="height: 50px;">
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -38,7 +40,7 @@
         </nav>
     </header>
 
-    <div class="container" style="padding-top: 70px;">
+    <div class="container" style="padding-top: 5.5rem;">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
