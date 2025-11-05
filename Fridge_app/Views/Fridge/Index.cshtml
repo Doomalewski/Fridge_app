@@ -17,34 +17,55 @@
     </button>
 </div>
 <div class="home-wrapper">
-    
-
     <div class="dashboard-grid">
         @foreach (var item in Model.Fridge)
-        {
-            <div class="dashboard-card visible">
-                <div class="card-content">
-                    <h3>@item.Product.Name</h3>
-                    <p>Ilość: <strong>@item.Quantity @item.Product.Unit</strong></p>
-                    <p>Ważny do: <strong>@item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
-                </div>
-                <div class="mt-auto d-flex justify-content-between pt-3">
-                    <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#editModal" data-id="@item.Id"
-                            data-quantity="@item.Quantity" data-unit="@item.Product.Unit">
-                        Edytuj
-                    </button>
-                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#deleteModal" data-id="@item.Id" data-name="@item.Product.Name">
-                        Usuń
-                    </button>
-                </div>
-            </div>
-        }
+{
+    // Oblicz klasę koloru kropki na podstawie daty ważności
+    var daysLeft = (item.ExpirationDate - DateTime.Now).TotalDays;
+    var freshnessClass = daysLeft switch
+    {
+        > 5 => "fresh",       // zielony
+        > 2 => "warning",     // żółty
+        > 0 => "soon",        // pomarańczowy
+        _ => "expired"        // czerwony
+    };
+
+    <div class="dashboard-card visible">
+        <div class="card-content">
+                    <div class="product-header">
+                        <h3 class="product-name">@item.Product.Name</h3>
+                        <span class="freshness-dot @freshnessClass"
+                              title="Ważny do: @(item.ExpirationDate != null ? item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy") : "Brak daty ważności")">
+                        </span>
+                    </div>
+
+            <p>Ilość: <strong>@item.Quantity @item.Product.Unit</strong></p>
+            <p>Ważny do: <strong>@item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
+        </div>
+        <div class="mt-auto d-flex justify-content-between pt-3">
+            <button class="btn btn-outline-dark btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal"
+                    data-id="@item.Id"
+                    data-quantity="@item.Quantity"
+                    data-unit="@item.Product.Unit">
+                Edytuj
+            </button>
+            <button class="btn btn-danger btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteModal"
+                    data-id="@item.Id"
+                    data-name="@item.Product.Name">
+                Usuń
+            </button>
+        </div>
+    </div>
+}
+
     </div>
 
     <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center">
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;">
             <i class="fas fa-magic"></i> Wygeneruj przepis
         </button>
     </form>
