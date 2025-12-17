@@ -4,158 +4,154 @@
     ViewData["Title"] = "Moja kuchnia";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-tools"></i> Moja kuchnia</h2>
-        <a asp-action="Index" asp-controller="Home" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Powrót
-        </a>
+<link rel="stylesheet" href="~/css/home.css" />
+<link rel="stylesheet" href="~/css/mykitchen-mymeals.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+   <div class="welcome-box">
+            <div class="welcome-icon">
+    <i class="bi bi-tools"></i>
+        </div>
+          <div>
+   <h1 class="welcome-title">Moja kuchnia</h1>
+        <p class="welcome-subtitle">Zarz¹dzaj narzêdziami kuchennymi i rozwijaj swoje umiejêtnoœci ??</p>
+    </div>
+    </div>
     </div>
 
-    @if (TempData["Success"] != null)
+    <div class="dashboard-grid">
+        <!-- Sekcja: Twoje narzêdzia -->
+        <div class="dashboard-card animate">
+   <div class="card-icon bg-success-light">
+           <i class="bi bi-check-circle"></i>
+</div>
+    <div class="card-content">
+        <h3>Twoje narzêdzia</h3>
+         <p class="text-muted mb-3">Narzêdzia w Twojej kuchni</p>
+   
+   @if (Model.UserTools?.Any() == true)
+     {
+     <div class="tools-list">
+ @foreach (var tool in Model.UserTools.Take(4))
+   {
+ <div class="tool-item">
+         <span class="tool-name">@tool.Name</span>
+     <form asp-action="RemoveTool" method="post" class="tool-remove">
+            <input type="hidden" name="toolId" value="@tool.Id" />
+     <button type="submit" class="btn btn-sm btn-outline-danger" 
+title="Usuñ narzêdzie"
+           onclick="return confirm('Czy na pewno chcesz usun¹æ to narzêdzie?')">
+     <i class="bi bi-trash"></i>
+   </button>
+               </form>
+       </div>
+     }
+       @if (Model.UserTools.Count > 4)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  <div class="text-center mt-2">
+    <small class="text-muted">+@(Model.UserTools.Count - 4) wiêcej</small>
+      </div>
+      }
+         </div>
+     }
+     else
+              {
+ <div class="text-center text-muted">
+            <small>Nie masz jeszcze narzêdzi. Dodaj je poni¿ej!</small>
+             </div>
+     }
+            </div>
+      <div class="stat-badge">
+      <strong>@Model.UserTools?.Count ?? 0</strong>
+  <small>narzêdzi</small>
+ </div>
+        </div>
+
+        <!-- Sekcja: Dostêpne narzêdzia -->
+        <div class="dashboard-card animate">
+          <div class="card-icon bg-primary-light">
+       <i class="bi bi-plus-circle"></i>
+     </div>
+         <div class="card-content">
+ <h3>Dostêpne narzêdzia</h3>
+        <p class="text-muted mb-3">Dodaj nowe narzêdzia</p>
+  
+      @if (Model.ToolsNotInKitchen?.Any() == true)
+       {
+          <div class="tools-list">
+   @foreach (var tool in Model.ToolsNotInKitchen.Take(4))
+     {
+  <div class="tool-item">
+      <span class="tool-name">@tool.Name</span>
+         <form asp-action="AddTool" method="post" class="tool-add">
+       <input type="hidden" name="toolId" value="@tool.Id" />
+    <button type="submit" class="btn btn-sm btn-outline-success" 
+        title="Dodaj narzêdzie">
+     <i class="bi bi-plus"></i>
+           </button>
+     </form>
+ </div>
+      }
+              @if (Model.ToolsNotInKitchen.Count > 4)
+        {
+  <div class="text-center mt-2">
+ <small class="text-muted">+@(Model.ToolsNotInKitchen.Count - 4) wiêcej</small>
+            </div>
+     }
+   </div>
+     }
+          else
+      {
+  <div class="text-center text-muted">
+    <small>Masz wszystkie dostêpne narzêdzia! ??</small>
         </div>
     }
-
-    @if (TempData["Info"] != null)
-    {
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            @TempData["Info"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <div class="row">
-        <!-- Narzêdzia u¿ytkownika -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="bi bi-check-circle"></i> Twoje narzêdzia</h4>
-                </div>
-                <div class="card-body">
-                    @if (Model.UserTools?.Any() == true)
-                    {
-                        <div class="row">
-                            @foreach (var tool in Model.UserTools)
-                            {
-                                <div class="col-md-6 mb-3">
-                                    <div class="card shadow-sm border-success">
-                                        <div class="card-body d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="bi bi-tools text-success"></i>
-                                                <strong>@tool.Name</strong>
-                                            </div>
-                                            <form asp-action="RemoveTool" method="post" class="d-inline">
-                                                <input type="hidden" name="toolId" value="@tool.Id" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                        onclick="return confirm('Czy na pewno chcesz usun¹æ to narzêdzie?')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-info text-center">
-                            <i class="bi bi-info-circle fa-2x mb-2"></i>
-                            <p>Nie masz jeszcze ¿adnych narzêdzi w kuchni.</p>
-                            <p class="mb-0">Dodaj narzêdzia z listy dostêpnych po prawej stronie!</p>
-                        </div>
-                    }
-                </div>
-            </div>
+ </div>
+  <div class="stat-badge">
+  <strong>@Model.AvailableTools?.Count ?? 0</strong>
+      <small>dostêpne</small>
+       </div>
         </div>
 
-        <!-- Dostêpne narzêdzia -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Dostêpne narzêdzia</h4>
-                </div>
-                <div class="card-body">
-                    @if (Model.ToolsNotInKitchen?.Any() == true)
-                    {
-                        <div class="row">
-                            @foreach (var tool in Model.ToolsNotInKitchen)
-                            {
-                                <div class="col-md-6 mb-3">
-                                    <div class="card shadow-sm">
-                                        <div class="card-body d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="bi bi-tools text-muted"></i>
-                                                <strong>@tool.Name</strong>
-                                            </div>
-                                            <form asp-action="AddTool" method="post" class="d-inline">
-                                                <input type="hidden" name="toolId" value="@tool.Id" />
-                                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                                    <i class="bi bi-plus"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-success text-center">
-                            <i class="bi bi-check-circle fa-2x mb-2"></i>
-                            <p class="mb-0">Masz ju¿ wszystkie dostêpne narzêdzia w swojej kuchni! ??</p>
-                        </div>
-                    }
-                </div>
-            </div>
+     <!-- Sekcja: Kompletnoœæ kuchni -->
+        <div class="dashboard-card animate">
+    <div class="card-icon bg-info-light">
+          <i class="bi bi-pie-chart"></i>
+   </div>
+     <div class="card-content">
+       <h3>Kompletnoœæ kuchni</h3>
+ <p class="text-muted mb-3">Twój postêp</p>
+  
+     <div class="progress-section">
+           @{
+     var completeness = Model.AvailableTools?.Count > 0 
+         ? Math.Round((double)Model.UserTools?.Count / Model.AvailableTools.Count * 100, 1) 
+ : 0;
+   }
+        <div class="progress-bar-container">
+    <div class="progress-bar-fill" style="width: @(completeness)%"></div>
         </div>
-    </div>
-
-    <!-- Statystyki -->
-    <div class="row mt-4">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm text-center">
-                <div class="card-body">
-                    <i class="bi bi-tools fa-2x text-success mb-2"></i>
-                    <h5>Twoje narzêdzia</h5>
-                    <h2 class="text-success">@Model.UserTools.Count</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm text-center">
-                <div class="card-body">
-                    <i class="bi bi-list fa-2x text-primary mb-2"></i>
-                    <h5>Dostêpne narzêdzia</h5>
-                    <h2 class="text-primary">@Model.AvailableTools.Count</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm text-center">
-                <div class="card-body">
-                    <i class="bi bi-percent fa-2x text-info mb-2"></i>
-                    <h5>Kompletnoœæ kuchni</h5>
-                    <h2 class="text-info">
-                        @(Model.AvailableTools.Count > 0 
-                            ? Math.Round((double)Model.UserTools.Count / Model.AvailableTools.Count * 100, 1) 
-                            : 0)%
-                    </h2>
-                </div>
+   <p class="progress-text">@completeness%</p>
+      </div>
+      </div>
+ <div class="stat-badge">
+     <strong>@(Model.UserTools?.Count ?? 0)/@(Model.AvailableTools?.Count ?? 0)</strong>
+        <small>narzêdzi</small>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+     const cards = document.querySelectorAll('.dashboard-card.animate');
+  cards.forEach((card, index) => {
+    setTimeout(() => {
+  card.classList.add('visible');
+       }, index * 150);
+       });
+   });
+    </script>
+}

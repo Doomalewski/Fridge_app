@@ -1,12 +1,13 @@
 ﻿using Fridge_app.Data;
 using Fridge_app.Models.ViewModels;
 using Fridge_app.Models;
+using Fridge_app.Exceptions;
+using Fridge_app.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
-using Fridge_app.Services;
 
 public class UserController : Controller
 {
@@ -273,24 +274,44 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var user = await _userService.GetUserByIdAsync(userId);
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+     var user = await _userService.GetUserByIdAsync(userId);
 
-            if (user?.Fridge == null || !user.Fridge.Any())
+            // Sprawdzenie czy użytkownik istnieje
+            if (user == null)
             {
-                TempData["Error"] = "Brak produktów w lodówce do generowania przepisów";
-                return RedirectToAction("Dashboard"); // Przekieruj gdzieś odpowiednio
-            }
+    TempData["Error"] = "Użytkownik nie został znaleziony";
+return RedirectToAction("Index", "Home");
+        }
 
-            var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge, user.CookingTools);
+         // Sprawdzenie czy lodówka jest pusta
+            if (user?.Fridge == null || !user.Fridge.Any())
+  {
+       TempData["Error"] = "Brak produktów w lodówce do generowania przepisów. Dodaj produkty, aby wygenerować przepis.";
+            return RedirectToAction("Index", "Home");
+  }
+
+   // Próba wygenerowania przepisu
+ var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge, user.CookingTools);
             return View("MealPreview", generatedMeal);
+ }
+        catch (InsufficientProductsException ex)
+   {
+            TempData["Error"] = $"Nie udało się wygenerować przepisu: {ex.Message}";
+       return RedirectToAction("Index", "Home");
+      }
+        catch (ApplicationException ex)
+      {
+     TempData["Error"] = $"Błąd aplikacji: {ex.Message}";
+       return RedirectToAction("Index", "Home");
         }
         catch (Exception ex)
         {
-            TempData["Error"] = $"Błąd generowania przepisu: {ex.Message}";
-            return RedirectToAction("Dashboard");
+     TempData["Error"] = $"Nieoczekiwany błąd: {ex.Message}";
+   return RedirectToAction("Index", "Home");
         }
     }
+
     [HttpPost]
     public async Task<IActionResult> SaveMeal([Bind("Description,Calories,Category,Tags,Recipe,SelectedProducts")] MealCreateViewModel model)
     {
