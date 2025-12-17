@@ -104,6 +104,69 @@ public class UserController : Controller
         await HttpContext.SignOutAsync();
         return RedirectToAction("Login");
     }
+
+    [HttpGet]
+    public async Task<IActionResult> MyMeals()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var meals = await _context.Meals
+                .Where(m => m.UserId == userId)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Ingridients)
+                        .ThenInclude(i => i.Product)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Steps)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.CookingTools)
+                .Include(m => m.Tags)
+                .OrderByDescending(m => m.Recipe.CreatedAt)
+                .ToListAsync();
+
+            return View(meals);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd wczytywania przepisów: {ex.Message}";
+            return RedirectToAction("Index", "Home");
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MealDetails(int id)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var meal = await _context.Meals
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Ingridients)
+                        .ThenInclude(i => i.Product)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Steps)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.CookingTools)
+                .Include(m => m.Tags)
+                .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+
+            if (meal == null)
+            {
+                TempData["Error"] = "Przepis nie został znaleziony";
+                return RedirectToAction("MyMeals");
+            }
+
+            return View(meal);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd wczytywania przepisu: {ex.Message}";
+            return RedirectToAction("MyMeals");
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> GenerateMeal()
     {

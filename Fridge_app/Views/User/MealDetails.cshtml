@@ -1,0 +1,121 @@
+@model Fridge_app.Models.Meal
+
+@{
+    ViewData["Title"] = Model.Recipe.Name;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-book-fill"></i> @Model.Recipe.Name</h2>
+        <a asp-action="MyMeals" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Powrót
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Informacje o posi³ku</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Opis:</strong> @Model.Description</p>
+                    <p><strong>Kategoria:</strong> <span class="badge bg-info">@Model.Category</span></p>
+                    <p><strong>Poziom trudnoœci:</strong> <span class="badge bg-warning text-dark">@Model.Recipe.Difficulty</span></p>
+                    <p><strong>Data utworzenia:</strong> @Model.Recipe.CreatedAt.ToShortDateString()</p>
+                    
+                    @if (Model.Tags?.Any() == true)
+                    {
+                        <p>
+                            <strong>Tagi:</strong>
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <span class="badge bg-secondary">@tag.Name</span>
+                            }
+                        </p>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Kroki przygotowania</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Recipe.Steps?.Any() == true)
+                    {
+                        <ol class="list-group list-group-numbered">
+                            @foreach (var step in Model.Recipe.Steps.OrderBy(s => s.StepNumber))
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <p class="mb-1">@step.Instruction</p>
+                                        </div>
+                                        @if (step.StepTime.HasValue)
+                                        {
+                                            <span class="badge bg-primary align-self-start">@step.StepTime min</span>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Brak kroków przygotowania.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Sk³adniki</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Recipe.Ingridients?.Any() == true)
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var ing in Model.Recipe.Ingridients)
+                            {
+                                <li class="list-group-item px-0">
+                                    <strong>@ing.Product.Name</strong><br />
+                                    <small class="text-muted">@ing.Amount g</small>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Brak sk³adników.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Narzêdzia kuchenne</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Recipe.CookingTools?.Any() == true)
+                    {
+                        <ul class="list-unstyled">
+                            @foreach (var tool in Model.Recipe.CookingTools)
+                            {
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i> @tool.Name
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Brak wymaganych narzêdzi.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
