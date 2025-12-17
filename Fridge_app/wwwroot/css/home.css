@@ -96,6 +96,12 @@
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
     }
 
+/* === Kafelek dla przepisów - dynamiczna wysokość === */
+.dashboard-card-meal {
+    height: auto;
+    min-height: 300px;
+}
+
 /* === Ikony === */
 .card-icon {
     width: 65px;

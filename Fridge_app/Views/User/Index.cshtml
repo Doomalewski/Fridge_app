@@ -1,0 +1,139 @@
+@model IEnumerable<Fridge_app.Models.User>
+@{
+    ViewData["Title"] = "Lista U¿ytkowników";
+}
+<link rel="stylesheet" href="~/css/users.css" />
+
+<div class="home-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        <a asp-action="Register" class="btn btn-primary">Dodaj Nowego U¿ytkownika</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+   </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+ </div>
+    }
+
+    <div class="input-group mb-3">
+        <span class="input-group-text">Szukaj</span>
+        <input type="text" id="searchInput" class="form-control" placeholder="Wpisz email u¿ytkownika...">
+    </div>
+
+    <div class="table-responsive">
+     <table class="table table-hover users-table">
+        <thead>
+          <tr>
+          <th>Email</th>
+  <th>Produkty w lodówce</th>
+<th>Narzêdzia kuchenne</th>
+         <th>Dieta</th>
+        <th>Akcje</th>
+         </tr>
+    </thead>
+     <tbody>
+                @foreach (var user in Model)
+           {
+         <tr class="user-row">
+      <td>
+  <strong>@user.Email</strong>
+ </td>
+   <td>
+   <span class="badge bg-info">@(user.Fridge?.Count() ?? 0)</span>
+            </td>
+            <td>
+        <span class="badge bg-success">@(user.CookingTools?.Count() ?? 0)</span>
+       </td>
+       <td>
+     @if (user.Diet != null && !string.IsNullOrEmpty(user.Diet.DietType))
+             {
+   <span class="badge bg-warning">@user.Diet.DietType</span>
+           }
+     else
+       {
+     <span class="text-muted">-</span>
+                }
+         </td>
+            <td>
+   <div class="btn-group btn-group-sm" role="group">
+      <a href="mailto:@user.Email" class="btn btn-outline-primary" title="Wyœlij wiadomoœæ">
+       <i class="bi bi-envelope"></i>
+       </a>
+       <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailsModal" onclick="showUserDetails('@user.Email', @user.Fridge?.Count() ?? 0, @user.CookingTools?.Count() ?? 0)" title="Poka¿ szczegó³y">
+     <i class="bi bi-eye"></i>
+         </button>
+            </div>
+        </td>
+      </tr>
+    }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Count() == 0)
+    {
+        <div class="alert alert-info mt-4" role="alert">
+   Brak u¿ytkowników w systemie.
+        </div>
+ }
+    else
+    {
+   <div class="mt-4 text-muted">
+            Liczba u¿ytkowników: <strong>@Model.Count()</strong>
+        </div>
+    }
+</div>
+
+<!-- Modal dla szczegó³ów u¿ytkownika -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+         <h5 class="modal-title" id="detailsModalLabel">Szczegó³y u¿ytkownika</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+     <div class="modal-body">
+  <p><strong>Email:</strong> <span id="userEmail"></span></p>
+     <p><strong>Produkty w lodówce:</strong> <span id="fridgeCount" class="badge bg-info"></span></p>
+       <p><strong>Narzêdzia kuchenne:</strong> <span id="toolsCount" class="badge bg-success"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("searchInput");
+         const rows = document.querySelectorAll(".user-row");
+
+            searchInput.addEventListener("keyup", function () {
+     const searchText = searchInput.value.toLowerCase();
+       rows.forEach(row => {
+         const email = row.querySelector("td:first-child").textContent.toLowerCase();
+           row.style.display = email.includes(searchText) ? "" : "none";
+                });
+        });
+   });
+
+ function showUserDetails(email, fridgeCount, toolsCount) {
+          document.getElementById("userEmail").textContent = email;
+            document.getElementById("fridgeCount").textContent = fridgeCount;
+            document.getElementById("toolsCount").textContent = toolsCount;
+   }
+    </script>
+}

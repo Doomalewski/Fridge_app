@@ -5,6 +5,7 @@ using Fridge_app.Models.ViewModels;
 using Fridge_app.Exceptions;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 
 namespace Fridge_app.Services
 {
@@ -14,12 +15,12 @@ namespace Fridge_app.Services
       private readonly GenerativeModel _model;
         private readonly ProductService _productService;
 
-        public GeminiService(ProductService productService)
+        public GeminiService(ProductService productService, IOptions<GeminiServiceOptions> options)
       {
             _productService = productService;
-   _apiKey = "AIzaSyBTINRGGSfQ7kkVKm_ERG53hZUgD_cedaM" ?? throw new ArgumentNullException(nameof(_apiKey));
-    var googleAI = new GoogleAi(_apiKey);
-     _model = googleAI.CreateGenerativeModel("gemini-2.0-flash");
+    _apiKey = options.Value.ApiKey ?? throw new ArgumentNullException(nameof(options), "Gemini API Key is not configured in appsettings.json");
+     var googleAI = new GoogleAi(_apiKey);
+  _model = googleAI.CreateGenerativeModel(options.Value.ModelName);
         }
 
         public async Task<string> GenerateResponseAsync(string prompt)

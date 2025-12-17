@@ -18,6 +18,9 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     options.DefaultRequestCulture = new RequestCulture("en-US");
 });
+// Configure Gemini Service Options
+builder.Services.Configure<GeminiServiceOptions>(
+    builder.Configuration.GetSection(GeminiServiceOptions.SectionName));
 // Rejestracja serwisu
 builder.Services.AddScoped<ProductService>();
 // Rejestracja generycznego repozytorium

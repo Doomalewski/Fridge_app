@@ -24,6 +24,26 @@ public class UserController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+      try
+        {
+    var users = await _context.Users
+  .Include(u => u.Fridge)
+   .Include(u => u.CookingTools)
+     .OrderByDescending(u => u.Id)
+   .ToListAsync();
+
+      return View(users);
+      }
+        catch (Exception ex)
+        {
+          TempData["Error"] = $"Błąd wczytywania użytkowników: {ex.Message}";
+          return RedirectToAction("Index", "Home");
+        }
+    }
+
+    [HttpGet]
     public IActionResult Register()
     {
         return View();
