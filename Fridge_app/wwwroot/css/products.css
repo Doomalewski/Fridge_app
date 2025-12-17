@@ -1,4 +1,19 @@
-﻿/* === Wrapper strony produktów === */
+﻿body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Tło jako obraz powielany */
+    background-image: url('/images/SiteBG.jpg'); /* podaj własną ścieżkę do obrazka */
+    background-repeat: repeat; /* powtarzanie obrazu w poziomie i pionie */
+    background-size: auto; /* oryginalny rozmiar obrazka */
+    background-position: top left; /* początek powielania od lewego górnego rogu */
+
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: top;
+    justify-content: center;
+}
+
+/* === Wrapper strony produktów === */
 .home-wrapper {
     max-width: 1200px;
     margin: 0 auto;
