@@ -167,6 +167,107 @@ public class UserController : Controller
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> MyKitchen()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _context.Users
+                .Include(u => u.CookingTools)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            var allTools = await _context.CookingTools.ToListAsync();
+
+            var model = new MyKitchenViewModel
+            {
+                UserTools = user?.CookingTools?.ToList() ?? new List<CookingTool>(),
+                AvailableTools = allTools
+            };
+
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd wczytywania kuchni: {ex.Message}";
+            return RedirectToAction("Index", "Home");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTool(int toolId)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _context.Users
+                .Include(u => u.CookingTools)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            var tool = await _context.CookingTools.FindAsync(toolId);
+
+            if (user == null || tool == null)
+            {
+                TempData["Error"] = "Nie znaleziono użytkownika lub narzędzia";
+                return RedirectToAction("MyKitchen");
+            }
+
+            if (!user.CookingTools.Any(t => t.Id == toolId))
+            {
+                user.CookingTools.Add(tool);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Dodano narzędzie: {tool.Name}";
+            }
+            else
+            {
+                TempData["Info"] = "To narzędzie jest już w Twojej kuchni";
+            }
+
+            return RedirectToAction("MyKitchen");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd dodawania narzędzia: {ex.Message}";
+            return RedirectToAction("MyKitchen");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveTool(int toolId)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _context.Users
+                .Include(u => u.CookingTools)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                TempData["Error"] = "Nie znaleziono użytkownika";
+                return RedirectToAction("MyKitchen");
+            }
+
+            var toolToRemove = user.CookingTools.FirstOrDefault(t => t.Id == toolId);
+            if (toolToRemove != null)
+            {
+                user.CookingTools.Remove(toolToRemove);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Usunięto narzędzie: {toolToRemove.Name}";
+            }
+
+            return RedirectToAction("MyKitchen");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd usuwania narzędzia: {ex.Message}";
+            return RedirectToAction("MyKitchen");
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> GenerateMeal()
     {

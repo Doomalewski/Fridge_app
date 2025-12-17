@@ -133,6 +133,11 @@
     color: #17a2b8;
 }
 
+.bg-secondary-light {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+}
+
 /* === Treść kafelka === */
 .card-content h3 {
     font-weight: 600;
