@@ -16,7 +16,7 @@ namespace Fridge_app.Services
         public GeminiService(ProductService productService)
         {
             _productService = productService;
-            _apiKey = "AIzaSyCbs99F9XIq7XgvtHegspxU8k6Ri7k_5CM" ?? throw new ArgumentNullException(nameof(_apiKey));
+            _apiKey = "AIzaSyBTINRGGSfQ7kkVKm_ERG53hZUgD_cedaM" ?? throw new ArgumentNullException(nameof(_apiKey));
             var googleAI = new GoogleAi(_apiKey);
             _model = googleAI.CreateGenerativeModel("gemini-2.0-flash");
         }
