@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # Application settings with sensitive data (secrets, passwords, API keys)
 appsettings.json
 appsettings.*.json
+/Fridge_app/appsettings.json
