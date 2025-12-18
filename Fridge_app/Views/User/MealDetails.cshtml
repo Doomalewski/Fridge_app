@@ -1,121 +1,131 @@
+@using System.Security.Claims
 @model Fridge_app.Models.Meal
 
 @{
-    ViewData["Title"] = Model.Recipe.Name;
+  ViewData["Title"] = Model.Recipe.Name;
+    var currentUserId = 0;
+    if (User.Identity?.IsAuthenticated == true && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+    {
+ currentUserId = userId;
+    }
+    var isOwner = currentUserId > 0 && currentUserId == Model.UserId;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-book-fill"></i> @Model.Recipe.Name</h2>
-        <a asp-action="MyMeals" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Powrót
-        </a>
-    </div>
+<link rel="stylesheet" href="~/css/mealprev.css" />
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Informacje o posi³ku</h4>
-                </div>
-                <div class="card-body">
-                    <p><strong>Opis:</strong> @Model.Description</p>
-                    <p><strong>Kategoria:</strong> <span class="badge bg-info">@Model.Category</span></p>
-                    <p><strong>Poziom trudnoœci:</strong> <span class="badge bg-warning text-dark">@Model.Recipe.Difficulty</span></p>
-                    <p><strong>Data utworzenia:</strong> @Model.Recipe.CreatedAt.ToShortDateString()</p>
-                    
-                    @if (Model.Tags?.Any() == true)
-                    {
-                        <p>
-                            <strong>Tagi:</strong>
-                            @foreach (var tag in Model.Tags)
-                            {
-                                <span class="badge bg-secondary">@tag.Name</span>
-                            }
-                        </p>
-                    }
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Kroki przygotowania</h4>
-                </div>
-                <div class="card-body">
-                    @if (Model.Recipe.Steps?.Any() == true)
-                    {
-                        <ol class="list-group list-group-numbered">
-                            @foreach (var step in Model.Recipe.Steps.OrderBy(s => s.StepNumber))
-                            {
-                                <li class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="mb-1">@step.Instruction</p>
-                                        </div>
-                                        @if (step.StepTime.HasValue)
-                                        {
-                                            <span class="badge bg-primary align-self-start">@step.StepTime min</span>
-                                        }
-                                    </div>
-                                </li>
-                            }
-                        </ol>
-                    }
-                    else
-                    {
-                        <p class="text-muted">Brak kroków przygotowania.</p>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Sk³adniki</h4>
-                </div>
-                <div class="card-body">
-                    @if (Model.Recipe.Ingridients?.Any() == true)
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var ing in Model.Recipe.Ingridients)
-                            {
-                                <li class="list-group-item px-0">
-                                    <strong>@ing.Product.Name</strong><br />
-                                    <small class="text-muted">@ing.Amount g</small>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted">Brak sk³adników.</p>
-                    }
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Narzêdzia kuchenne</h4>
-                </div>
-                <div class="card-body">
-                    @if (Model.Recipe.CookingTools?.Any() == true)
-                    {
-                        <ul class="list-unstyled">
-                            @foreach (var tool in Model.Recipe.CookingTools)
-                            {
-                                <li class="mb-2">
-                                    <i class="bi bi-check-circle text-success"></i> @tool.Name
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted">Brak wymaganych narzêdzi.</p>
-                    }
-                </div>
-            </div>
+<div class="meal-preview-wrapper">
+    <div class="meal-header">
+    <h1 class="meal-title">@Model.Recipe.Name</h1>
+        <p class="meal-subtitle">@Model.Description</p>
+        <div style="margin-top: 1.5rem;">
+<a href="javascript:history.back()" style="display: inline-block; padding: 0.6rem 1.5rem; background-color: #6c757d; color: #fff; border-radius: 0.8rem; text-decoration: none; font-weight: 500; transition: all 0.3s ease;">
+      <i class="bi bi-arrow-left"></i> Powrót
+      </a>
         </div>
     </div>
+
+    <div class="meal-grid">
+    <!-- Informacje o posi³ku -->
+        <div class="meal-card animate">
+          <h3>Informacje o posi³ku</h3>
+            <p><strong>Kategoria:</strong> @Model.Category</p>
+   <p><strong>Poziom trudnoœci:</strong> @Model.Recipe.Difficulty</p>
+            <p><strong>Data utworzenia:</strong> @Model.Recipe.CreatedAt.ToShortDateString()</p>
+   <p><strong>Ca³kowity czas przygotowania:</strong> @(Model.Recipe.Steps?.Sum(s => s.StepTime ?? 0) ?? 0) min</p>
+       @if (Model.Tags?.Any() == true)
+       {
+   <p>
+  <strong>Tagi:</strong><br />
+ @foreach (var tag in Model.Tags)
+ {
+    <span style="display: inline-block; background: #e0e0e0; color: #555; padding: 0.3rem 0.8rem; border-radius: 0.8rem; font-size: 0.9rem; margin: 0.2rem 0.2rem 0.2rem 0;">@tag.Name</span>
+  }
+          </p>
+ }
+        </div>
+
+        <!-- Sk³adniki -->
+    <div class="meal-card animate">
+       <h3>Sk³adniki</h3>
+     @if (Model.Recipe.Ingridients?.Any() == true)
+ {
+         <ul class="ingredient-list">
+      @foreach (var ing in Model.Recipe.Ingridients.DistinctBy(i => i.Product.Id))
+  {
+            <li>@ing.Product.Name — @ing.Amount g</li>
+          }
+  </ul>
+  }
+       else
+         {
+    <p class="text-muted">Brak sk³adników do wyœwietlenia.</p>
+         }
+ </div>
+
+ <!-- Kroki przygotowania -->
+        <div class="meal-card animate">
+   <h3>Kroki przygotowania</h3>
+  @if (Model.Recipe.Steps?.Any() == true)
+        {
+       <ol class="step-list">
+          @foreach (var step in Model.Recipe.Steps.OrderBy(s => s.StepNumber))
+         {
+  <li>
+             <p style="margin: 0;">@step.Instruction</p>
+  @if (step.StepTime.HasValue)
+    {
+    <small>@step.StepTime min</small>
+  }
+              </li>
+       }
+      </ol>
+       }
+   else
+       {
+          <p class="text-muted">Brak kroków przygotowania.</p>
+            }
+        </div>
+
+    <!-- Narzêdzia kuchenne -->
+        <div class="meal-card animate">
+       <h3>Narzêdzia kuchenne</h3>
+    @if (Model.Recipe.CookingTools?.Any() == true)
+        {
+    <div class="tools-list">
+    @foreach (var tool in Model.Recipe.CookingTools)
+       {
+ <span>@tool.Name</span>
+   }
+       </div>
+   }
+   else
+  {
+      <p class="text-muted">Brak wymaganych narzêdzi.</p>
+  }
+        </div>
+    </div>
+
+    @if (isOwner)
+    {
+    <div class="text-center mt-4" style="margin-top: 2rem;">
+        <form asp-action="DeleteMeal" asp-route-id="@Model.Id" method="post" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usun¹æ ten przepis? Tej operacji nie bêdzie mo¿na cofn¹æ.');">
+  <button type="submit" class="meal-btn" style="background-color: #dc3545;">
+           <i class="bi bi-trash"></i> Usuñ przepis
+            </button>
+        </form>
+    </div>
+}
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+        cards.forEach((card, index) => {
+setTimeout(() => {
+    card.classList.add('visible'); // animacja wjazdu + animacja linii
+   }, index * 150);
+   });
+   });
+ </script>
+}

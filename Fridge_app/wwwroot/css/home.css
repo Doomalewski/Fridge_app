@@ -68,6 +68,12 @@
     gap: 2rem;
 }
 
+/* === Siatka dla MyMeals - rozszerzona === */
+.dashboard-grid.meals-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
 /* === Kafelek === */
 .dashboard-card {
     background: #fff;
@@ -99,7 +105,7 @@
 /* === Kafelek dla przepisów - dynamiczna wysokość === */
 .dashboard-card-meal {
     height: auto;
-    min-height: 300px;
+    min-height: 420px;
 }
 
 /* === Ikony === */

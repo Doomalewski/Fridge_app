@@ -1,0 +1,104 @@
+@model IEnumerable<Fridge_app.Models.Meal>
+@{
+    ViewData["Title"] = "Przepisy - " + (ViewData["UserEmail"] ?? "U¿ytkownik");
+}
+
+<link rel="stylesheet" href="~/css/home.css" />
+<link rel="stylesheet" href="~/css/mykitchen-mymeals.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+       <div class="welcome-icon">
+     <i class="bi bi-book"></i>
+          </div>
+ <div>
+   <h1 class="welcome-title">Przepisy u¿ytkownika</h1>
+      <p class="welcome-subtitle">Email: <strong>@ViewData["UserEmail"]</strong></p>
+</div>
+      </div>
+ <a asp-action="Index" class="btn btn-secondary">
+     <i class="bi bi-arrow-left"></i> Wróæ
+        </a>
+    </div>
+
+    @if (Model?.Any() == true)
+    {
+        <div class="dashboard-grid meals-grid">
+   @foreach (var meal in Model)
+  {
+     <div class="dashboard-card dashboard-card-meal animate">
+  <div class="card-icon bg-info-light">
+      <i class="bi bi-bookmark"></i>
+    </div>
+   <div class="card-content">
+   <h3>@meal.Recipe.Name</h3>
+ <p>@meal.Description</p>
+
+     <div class="meal-badges mb-2">
+<span class="badge bg-info">@meal.Category</span>
+         <span class="badge bg-warning text-dark">@meal.Recipe.Difficulty</span>
+         </div>
+
+    @if (meal.Tags?.Any() == true)
+        {
+    <div class="meal-tags mb-2">
+ @foreach (var tag in meal.Tags.Take(2))
+    {
+  <span class="badge bg-secondary">@tag.Name</span>
+       }
+       @if (meal.Tags.Count > 2)
+    {
+     <span class="badge bg-secondary">+@(meal.Tags.Count - 2)</span>
+      }
+       </div>
+     }
+
+<div class="meal-meta mt-3">
+    <div class="meta-item">
+   <i class="bi bi-basket"></i>
+           <small>@meal.Recipe.Ingridients?.Count sk³adnik(ów)</small>
+  </div>
+           <div class="meta-item">
+        <i class="bi bi-clock"></i>
+       <small>@(meal.Recipe.Steps?.Sum(s => s.StepTime ?? 0)) min</small>
+       </div>
+     <div class="meta-item">
+  <i class="bi bi-calendar"></i>
+     <small>@meal.Recipe.CreatedAt.ToShortDateString()</small>
+</div>
+      </div>
+</div>
+            <div style="display: flex; gap: 8px;">
+      <a asp-action="ViewMealDetails" asp-route-id="@meal.Id" class="card-link" style="flex: 1;">
+        <i class="bi bi-eye"></i> Szczegó³y
+         </a>
+        </div>
+       </div>
+    }
+  </div>
+ }
+    else
+    {
+        <div class="empty-state">
+       <div class="empty-icon">
+                <i class="bi bi-inbox"></i>
+      </div>
+     <h3>Ten u¿ytkownik nie ma jeszcze ¿adnych przepisów</h3>
+     <p>Wróæ do listy u¿ytkowników i spróbuj z innym u¿ytkownikiem.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll('.dashboard-card.animate');
+       cards.forEach((card, index) => {
+    setTimeout(() => {
+      card.classList.add('visible');
+     }, index * 150);
+     });
+        });
+    </script>
+}

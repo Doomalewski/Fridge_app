@@ -12,6 +12,7 @@ namespace Fridge_app.Services
         Task CreateMealAsync(Meal meal, Recipe recipe, List<ProductWithAmount> products);
         Task UpdateMealAsync(Meal meal);
         Task DeleteMealAsync(int id);
+        Task DeleteRecipeAsync(int recipeId);
     }
 
     public class MealService : IMealService
@@ -80,8 +81,6 @@ namespace Fridge_app.Services
             }
         }
 
-
-
         public async Task UpdateMealAsync(Meal meal)
         {
             await _mealRepository.UpdateAsync(meal);
@@ -93,6 +92,39 @@ namespace Fridge_app.Services
             if (meal != null)
             {
                 await _mealRepository.DeleteAsync(meal);
+            }
+        }
+
+        public async Task DeleteRecipeAsync(int recipeId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Usuń wszystkie składniki (ProductWithAmount) związane z przepisem
+                var ingredients = await _context.Set<ProductWithAmount>()
+                    .Where(p => p.RecipeId == recipeId)
+                    .ToListAsync();
+
+                foreach (var ingredient in ingredients)
+                {
+                    _context.Set<ProductWithAmount>().Remove(ingredient);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Usuń sam przepis
+                var recipe = await _recipeRepository.GetByIdAsync(recipeId);
+                if (recipe != null)
+                {
+                    await _recipeRepository.DeleteAsync(recipe);
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
         }
     }

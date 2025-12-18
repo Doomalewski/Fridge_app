@@ -64,9 +64,9 @@
 
     </div>
 
-    <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center">
-        <button type="submit" class="btn btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;">
-            <i class="fas fa-magic"></i> Wygeneruj przepis
+    <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center" id="generateMealForm">
+        <button type="button" class="btn btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;" data-bs-toggle="modal" data-bs-target="#generateMealModal">
+       <i class="fas fa-magic"></i> Wygeneruj przepis
         </button>
     </form>
 </div>
@@ -120,6 +120,128 @@
 </div>
 
 @await Html.PartialAsync("_AddProductModals")
+
+<!-- Modal generowania przepisu z preferencjami -->
+<div class="modal fade" id="generateMealModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-3 shadow-sm">
+    <div class="modal-header">
+          <h5 class="modal-title">Preferencje generowania przepisu</h5>
+     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+<form asp-controller="User" asp-action="GenerateMeal" method="post">
+                <div class="modal-body">
+      <div class="mb-4">
+         <h6 class="mb-3">Typ posiłku</h6>
+            <div class="form-check">
+     <input class="form-check-input" type="radio" name="MealType" id="mealBreakfast" value="Śniadanie">
+             <label class="form-check-label" for="mealBreakfast">Śniadanie</label>
+          </div>
+       <div class="form-check">
+              <input class="form-check-input" type="radio" name="MealType" id="mealLunch" value="Obiad">
+            <label class="form-check-label" for="mealLunch">Obiad</label>
+     </div>
+     <div class="form-check">
+        <input class="form-check-input" type="radio" name="MealType" id="mealDinner" value="Kolacja">
+          <label class="form-check-label" for="mealDinner">Kolacja</label>
+           </div>
+                <div class="form-check">
+        <input class="form-check-input" type="radio" name="MealType" id="mealSnack" value="Przekąska">
+   <label class="form-check-label" for="mealSnack">Przekąska</label>
+       </div>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="MealType" id="mealOther" value="Inne">
+             <label class="form-check-label" for="mealOther">Inne</label>
+      </div>
+     </div>
+
+           <div class="mb-4">
+              <h6 class="mb-3">Poziom trudności</h6>
+         <div class="form-check">
+    <input class="form-check-input" type="radio" name="Difficulty" id="diffEasy" value="Easy">
+        <label class="form-check-label" for="diffEasy">Łatwy</label>
+  </div>
+     <div class="form-check">
+          <input class="form-check-input" type="radio" name="Difficulty" id="diffMedium" value="Medium">
+                 <label class="form-check-label" for="diffMedium">Średni</label>
+       </div>
+          <div class="form-check">
+             <input class="form-check-input" type="radio" name="Difficulty" id="diffHard" value="Hard">
+   <label class="form-check-label" for="diffHard">Trudny</label>
+  </div>
+            </div>
+
+     <div class="mb-4">
+               <h6 class="mb-3">Czas przygotowania</h6>
+   <div class="form-check">
+    <input class="form-check-input" type="radio" name="PrepTime" id="timeQuick" value="Szybkie (do 15 minut)">
+         <label class="form-check-label" for="timeQuick">Szybkie (do 15 minut)</label>
+         </div>
+         <div class="form-check">
+         <input class="form-check-input" type="radio" name="PrepTime" id="timeMedium" value="Średnie (15-45 minut)">
+    <label class="form-check-label" for="timeMedium">Średnie (15-45 minut)</label>
+        </div>
+      <div class="form-check">
+ <input class="form-check-input" type="radio" name="PrepTime" id="timeLong" value="Długie (ponad 45 minut)">
+      <label class="form-check-label" for="timeLong">Długie (ponad 45 minut)</label>
+ </div>
+    </div>
+
+   <div class="mb-4">
+   <label for="cuisineType" class="form-label">Rodzaj kuchni (opcjonalnie)</label>
+          <select class="form-select" id="cuisineType" name="CuisineType">
+        <option value="">Brak preferencji</option>
+          <option value="Włoska">Włoska</option>
+    <option value="Azjatycka">Azjatycka</option>
+       <option value="Śródziemnomorska">Śródziemnomorska</option>
+       <option value="Meksykańska">Meksykańska</option>
+        <option value="Indyjska">Indyjska</option>
+ <option value="Polska">Polska</option>
+    <option value="Francuska">Francuska</option>
+           <option value="Niemiecka">Niemiecka</option>
+<option value="Orientalna">Orientalna</option>
+         </select>
+       </div>
+
+             <div class="mb-4">
+      <h6 class="mb-3">Preferencje żywieniowe</h6>
+     <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="isVegetarian" name="IsVegetarian">
+      <label class="form-check-label" for="isVegetarian">Wegetariańskie</label>
+        </div>
+ <div class="form-check">
+       <input class="form-check-input" type="checkbox" id="isVegan" name="IsVegan">
+        <label class="form-check-label" for="isVegan">Wegańskie</label>
+   </div>
+    </div>
+
+          <div class="mb-4">
+        <label for="additionalPreferences" class="form-label">Dodatkowe preferencje (opcjonalnie)</label>
+          <textarea class="form-control" id="additionalPreferences" name="AdditionalPreferences" rows="3" placeholder="Np. bez orzechów, bez mleka, bez glutenu..."></textarea>
+    </div>
+
+   <div class="mb-4">
+        <h6 class="mb-3">Język przepisu</h6>
+  <div class="form-check">
+   <input class="form-check-input" type="radio" name="Language" id="langPolish" value="pl" checked>
+        <label class="form-check-label" for="langPolish">🇵🇱 Polski</label>
+     </div>
+   <div class="form-check">
+        <input class="form-check-input" type="radio" name="Language" id="langEnglish" value="en">
+      <label class="form-check-label" for="langEnglish">🇬🇧 English</label>
+     </div>
+    </div>
+           </div>
+     <div class="modal-footer">
+         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">
+             <i class="fas fa-magic"></i> Wygeneruj przepis
+          </button>
+     </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>

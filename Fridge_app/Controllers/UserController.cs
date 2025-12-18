@@ -159,32 +159,102 @@ public class UserController : Controller
     public async Task<IActionResult> MealDetails(int id)
     {
         try
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+      {
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var meal = await _context.Meals
-                .Include(m => m.Recipe)
-                    .ThenInclude(r => r.Ingridients)
-                        .ThenInclude(i => i.Product)
-                .Include(m => m.Recipe)
-                    .ThenInclude(r => r.Steps)
-                .Include(m => m.Recipe)
-                    .ThenInclude(r => r.CookingTools)
-                .Include(m => m.Tags)
-                .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+      var meal = await _context.Meals
+      .Include(m => m.Recipe)
+     .ThenInclude(r => r.Ingridients)
+    .ThenInclude(i => i.Product)
+      .Include(m => m.Recipe)
+        .ThenInclude(r => r.Steps)
+        .Include(m => m.Recipe)
+   .ThenInclude(r => r.CookingTools)
+      .Include(m => m.Tags)
+  .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
 
-            if (meal == null)
-            {
-                TempData["Error"] = "Przepis nie został znaleziony";
-                return RedirectToAction("MyMeals");
-            }
+       if (meal == null)
+      {
+   TempData["Error"] = "Przepis nie został znaleziony";
+    return RedirectToAction("MyMeals");
+       }
 
-            return View(meal);
+  return View(meal);
         }
         catch (Exception ex)
+ {
+    TempData["Error"] = $"Błąd wczytywania przepisu: {ex.Message}";
+   return RedirectToAction("MyMeals");
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ViewMealDetails(int id)
+    {
+      try
+    {
+  var meal = await _context.Meals
+ .Include(m => m.Recipe)
+     .ThenInclude(r => r.Ingridients)
+ .ThenInclude(i => i.Product)
+      .Include(m => m.Recipe)
+  .ThenInclude(r => r.Steps)
+   .Include(m => m.Recipe)
+   .ThenInclude(r => r.CookingTools)
+    .Include(m => m.Tags)
+  .FirstOrDefaultAsync(m => m.Id == id);
+
+    if (meal == null)
+          {
+     TempData["Error"] = "Przepis nie został znaleziony";
+  return RedirectToAction("Index");
+     }
+
+  return View("MealDetails", meal);
+        }
+      catch (Exception ex)
+ {
+    TempData["Error"] = $"Błąd wczytywania przepisu: {ex.Message}";
+     return RedirectToAction("Index");
+      }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ViewUserMeals(int userId)
+    {
+      try
         {
-            TempData["Error"] = $"Błąd wczytywania przepisu: {ex.Message}";
-            return RedirectToAction("MyMeals");
+// Pobierz dane użytkownika, którego przepisy chcemy zobaczyć
+    var user = await _context.Users
+        .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+  {
+            TempData["Error"] = "Użytkownik nie został znaleziony";
+         return RedirectToAction("Index");
+            }
+
+    // Pobierz wszystkie przepisy tego użytkownika
+   var meals = await _context.Meals
+         .Where(m => m.UserId == userId)
+          .Include(m => m.Recipe)
+        .ThenInclude(r => r.Ingridients)
+   .ThenInclude(i => i.Product)
+  .Include(m => m.Recipe)
+     .ThenInclude(r => r.Steps)
+     .Include(m => m.Recipe)
+         .ThenInclude(r => r.CookingTools)
+          .Include(m => m.Tags)
+          .OrderByDescending(m => m.Recipe.CreatedAt)
+     .ToListAsync();
+
+ViewData["UserEmail"] = user.Email;
+     return View("ViewUserMeals", meals);
+        }
+        catch (Exception ex)
+   {
+            TempData["Error"] = $"Błąd wczytywania przepisów: {ex.Message}";
+            return RedirectToAction("Index");
         }
     }
 
@@ -289,163 +359,204 @@ public class UserController : Controller
         }
     }
 
-    [HttpPost]
-    public async Task<IActionResult> GenerateMeal()
-    {
-        try
-        {
-    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-     var user = await _userService.GetUserByIdAsync(userId);
-
-            // Sprawdzenie czy użytkownik istnieje
-            if (user == null)
-            {
-    TempData["Error"] = "Użytkownik nie został znaleziony";
-return RedirectToAction("Index", "Home");
+    [HttpGet]
+    public IActionResult ShowGenerateMealPreferences()
+     {
+     var preferences = new MealGenerationPreferencesViewModel();
+        return PartialView("_GenerateMealPreferencesModal", preferences);
         }
 
-         // Sprawdzenie czy lodówka jest pusta
-            if (user?.Fridge == null || !user.Fridge.Any())
-  {
-       TempData["Error"] = "Brak produktów w lodówce do generowania przepisów. Dodaj produkty, aby wygenerować przepis.";
-            return RedirectToAction("Index", "Home");
+   [HttpPost]
+ public async Task<IActionResult> GenerateMeal(MealGenerationPreferencesViewModel? preferences)
+        {
+ try
+     {
+     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+   var user = await _userService.GetUserByIdAsync(userId);
+
+      // Sprawdzenie czy użytkownik istnieje
+   if (user == null)
+       {
+      TempData["Error"] = "Użytkownik nie został znaleziony";
+      return RedirectToAction("Index", "Home");
   }
 
-   // Próba wygenerowania przepisu
- var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge, user.CookingTools);
-            return View("MealPreview", generatedMeal);
- }
-        catch (InsufficientProductsException ex)
-   {
-            TempData["Error"] = $"Nie udało się wygenerować przepisu: {ex.Message}";
-       return RedirectToAction("Index", "Home");
-      }
-        catch (ApplicationException ex)
-      {
-     TempData["Error"] = $"Błąd aplikacji: {ex.Message}";
-       return RedirectToAction("Index", "Home");
-        }
-        catch (Exception ex)
-        {
-     TempData["Error"] = $"Nieoczekiwany błąd: {ex.Message}";
+    // Sprawdzenie czy lodówka jest pusta
+   if (user?.Fridge == null || !user.Fridge.Any())
+ {
+       TempData["Error"] = "Brak produktów w lodówce do generowania przepisów. Dodaj produkty, aby wygenerować przepis.";
    return RedirectToAction("Index", "Home");
-        }
     }
+
+      // Próba wygenerowania przepisu z preferencjami
+     var generatedMeal = await _geminiService.GenerateMealAsync(user.Fridge, user.CookingTools, preferences);
+    return View("MealPreview", generatedMeal);
+            }
+            catch (InsufficientProductsException ex)
+   {
+  TempData["Error"] = $"Nie udało się wygenerować przepisu: {ex.Message}";
+  return RedirectToAction("Index", "Home");
+     }
+       catch (ApplicationException ex)
+    {
+        TempData["Error"] = $"Błąd aplikacji: {ex.Message}";
+         return RedirectToAction("Index", "Home");
+       }
+         catch (Exception ex)
+      {
+         TempData["Error"] = $"Nieoczekiwany błąd: {ex.Message}";
+  return RedirectToAction("Index", "Home");
+        }
+   }
 
     [HttpPost]
     public async Task<IActionResult> SaveMeal([Bind("Description,Calories,Category,Tags,Recipe,SelectedProducts")] MealCreateViewModel model)
     {
         try
-        {
+      {
             if (!ModelState.IsValid)
-            {
-                TempData["Error"] = "Nieprawidłowe dane przepisu.";
+  {
+       TempData["Error"] = "Nieprawidłowe dane przepisu.";
                 return RedirectToAction("Dashboard");
-            }
+      }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var user = await _userService.GetUserByIdAsync(userId);
 
-            // Tworzymy nowy posiłek
-            var meal = new Meal
+     // Tworzymy nowy posiłek
+  var meal = new Meal
             {
-                Description = model.Description,
-                Category = model.Category,
-                Tags = model.Tags,
-                UserId = userId
+Description = model.Description,
+      Category = model.Category,
+             Tags = model.Tags,
+           UserId = userId
             };
 
-            // Tworzymy nowy przepis
+       // Tworzymy nowy przepis
             var recipe = new Recipe
-            {
-                Name = model.Recipe?.Name ?? "Bez nazwy",
+  {
+ Name = model.Recipe?.Name ?? "Bez nazwy",
                 Difficulty = model.Recipe?.Difficulty ?? "Nieokreślony",
-                CreatedAt = model.Recipe?.CreatedAt ?? DateTime.Now
-            };
+           CreatedAt = model.Recipe?.CreatedAt ?? DateTime.Now
+     };
 
             // ✅ SKŁADNIKI (Ingridients)
-            if (model.Recipe?.Ingridients != null && model.Recipe.Ingridients.Any())
+     if (model.Recipe?.Ingridients != null && model.Recipe.Ingridients.Any())
             {
-                foreach (var ing in model.Recipe.Ingridients)
-                {
-                    var product = await _context.Products.FindAsync(ing.ProductId);
-                    if (product != null)
-                    {
-                        recipe.Ingridients.Add(new ProductWithAmount
-                        {
-                            ProductId = product.Id,
-                            Amount = ing.Amount,
-                            Product = product
-                        });
-                    }
-                }
-            }
+              foreach (var ing in model.Recipe.Ingridients)
+             {
+            var product = await _context.Products.FindAsync(ing.ProductId);
+            if (product != null)
+         {
+            recipe.Ingridients.Add(new ProductWithAmount
+   {
+              ProductId = product.Id,
+      Amount = ing.Amount,
+           Product = product
+     });
+}
+      }
+  }
             else if (model.SelectedProducts != null && model.SelectedProducts.Any())
-            {
-                // Alternatywnie — jeśli dane pochodzą z SelectedProducts
-                foreach (var selectedProduct in model.SelectedProducts)
+        {
+             // Alternatywnie — jeśli dane pochodzą z SelectedProducts
+     foreach (var selectedProduct in model.SelectedProducts)
+       {
+             var product = await _context.Products.FindAsync(selectedProduct.ProductId);
+ if (product != null)
+         {
+         recipe.Ingridients.Add(new ProductWithAmount
                 {
-                    var product = await _context.Products.FindAsync(selectedProduct.ProductId);
-                    if (product != null)
-                    {
-                        recipe.Ingridients.Add(new ProductWithAmount
-                        {
-                            ProductId = product.Id,
-                            Amount = selectedProduct.Amount,
-                            Product = product
-                        });
-                    }
-                }
-            }
+              ProductId = product.Id,
+  Amount = selectedProduct.Amount,
+         Product = product
+  });
+  }
+           }
+        }
 
-            // ✅ KROKI (Steps)
+   // ✅ KROKI (Steps)
             if (model.Recipe?.Steps != null && model.Recipe.Steps.Any())
             {
-                foreach (var step in model.Recipe.Steps)
-                {
-                    recipe.Steps.Add(new RecipeStep
-                    {
-                        StepNumber = step.StepNumber,
-                        Instruction = step.Instruction,
-                        StepTime = step.StepTime
-                    });
-                }
-            }
+          foreach (var step in model.Recipe.Steps)
+       {
+        recipe.Steps.Add(new RecipeStep
+          {
+         StepNumber = step.StepNumber,
+     Instruction = step.Instruction,
+     StepTime = step.StepTime
+});
+      }
+       }
 
-            // ✅ NARZĘDZIA KUCHENNE (CookingTools)
-            if (model.Recipe?.CookingTools != null && model.Recipe.CookingTools.Any())
+       // ✅ NARZĘDZIA KUCHENNE (CookingTools)
+    if (model.Recipe?.CookingTools != null && model.Recipe.CookingTools.Any())
             {
-                foreach (var tool in model.Recipe.CookingTools)
-                {
-                    if (string.IsNullOrWhiteSpace(tool.Name))
-                        continue;
+           foreach (var tool in model.Recipe.CookingTools)
+          {
+         if (string.IsNullOrWhiteSpace(tool.Name))
+       continue;
 
-                    var dbTool = await _context.CookingTools
-                        .FirstOrDefaultAsync(t => t.Name.ToLower() == tool.Name.ToLower());
+        var dbTool = await _context.CookingTools
+             .FirstOrDefaultAsync(t => t.Name.ToLower() == tool.Name.ToLower());
 
-                    if (dbTool == null)
-                    {
-                        dbTool = new CookingTool { Name = tool.Name };
-                        _context.CookingTools.Add(dbTool);
-                        await _context.SaveChangesAsync();
-                    }
+    if (dbTool == null)
+        {
+      dbTool = new CookingTool { Name = tool.Name };
+  _context.CookingTools.Add(dbTool);
+                await _context.SaveChangesAsync();
+       }
 
-                    recipe.CookingTools.Add(dbTool);
-                }
+        recipe.CookingTools.Add(dbTool);
+       }
             }
 
             // ✅ Zapisujemy cały posiłek z przepisem i składnikami
             await _mealService.CreateMealAsync(meal, recipe, recipe.Ingridients);
 
-            TempData["Success"] = "Przepis został pomyślnie zapisany!";
-            return RedirectToAction("MealDetails", new { id = meal.Id });
+ TempData["Success"] = "Przepis został pomyślnie zapisany!";
+     return RedirectToAction("MealDetails", new { id = meal.Id });
         }
         catch (Exception ex)
-        {
-            TempData["Error"] = $"Błąd zapisywania: {ex.Message}";
-            return RedirectToAction("Dashboard");
-        }
+     {
+      TempData["Error"] = $"Błąd zapisywania: {ex.Message}";
+    return RedirectToAction("Dashboard");
+     }
     }
 
+    [HttpPost]
+    public async Task<IActionResult> DeleteMeal(int id)
+    {
+      try
+        {
+          var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
+    var meal = await _context.Meals
+       .Include(m => m.Recipe)
+       .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+
+   if (meal == null)
+          {
+          TempData["Error"] = "Przepis nie został znaleziony";
+    return RedirectToAction("MyMeals");
+      }
+
+            // Usuń przepis powiązany z posiłkiem
+   if (meal.RecipeId.HasValue)
+        {
+         await _mealService.DeleteRecipeAsync(meal.RecipeId.Value);
+            }
+
+            // Usuń sam posiłek
+            await _mealService.DeleteMealAsync(id);
+
+            TempData["Success"] = "Przepis został pomyślnie usunięty!";
+            return RedirectToAction("MyMeals");
+        }
+        catch (Exception ex)
+   {
+            TempData["Error"] = $"Błąd usuwania przepisu: {ex.Message}";
+  return RedirectToAction("MyMeals");
+  }
+    }
 }

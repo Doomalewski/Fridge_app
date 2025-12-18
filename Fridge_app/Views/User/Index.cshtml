@@ -73,7 +73,10 @@
        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailsModal" onclick="showUserDetails('@user.Email', @user.Fridge?.Count() ?? 0, @user.CookingTools?.Count() ?? 0)" title="Poka¿ szczegó³y">
      <i class="bi bi-eye"></i>
          </button>
-            </div>
+       <a asp-action="ViewUserMeals" asp-route-userId="@user.Id" class="btn btn-outline-success" title="Poka¿ przepisy">
+   <i class="bi bi-book"></i>
+       </a>
+     </div>
         </td>
       </tr>
     }
