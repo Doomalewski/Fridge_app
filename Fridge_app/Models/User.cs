@@ -15,17 +15,19 @@ namespace Fridge_app.Models
         [Required]
         public string PasswordHash { get; set; }
 
-        public int? DietId { get; set; }
-        [ForeignKey("DietId")]
-        public Diet Diet { get; set; }
+        public int? HumanStatsId { get; set; }
+        [ForeignKey("HumanStatsId")]
+        public HumanStats HumanStats { get; set; }
 
         public ICollection<StoredProduct> Fridge { get; set; }
         public List<CookingTool> CookingTools { get; set; }
+        public ICollection<NutritionTarget> NutritionTargets { get; set; }
+
         public User()
         {
             Fridge = new HashSet<StoredProduct>();
-            Diet = new Diet();
             CookingTools = new List<CookingTool>();
+            NutritionTargets = new HashSet<NutritionTarget>();
         }
     }
 

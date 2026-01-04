@@ -324,3 +324,215 @@ padding: 1rem 2rem;
   font-size: 3rem;
     }
 }
+
+/* === Stylizacja dla AccountSettings === */
+.settings-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.settings-content .dashboard-card {
+    height: auto;
+    min-height: auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control, .form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d1d1;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.form-control:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.05);
+}
+
+.ms-2 {
+    margin-left: 0.5rem;
+}
+
+/* === Grid system dla formularzy === */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -0.75rem;
+    margin-left: -0.75rem;
+}
+
+.col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.text-danger {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Responsywnoœæ dla grid */
+@media (max-width: 768px) {
+    .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* === Style dla suwaków (range inputs) === */
+.form-range {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(to right, #007bff 0%, #007bff 50%, #e0e0e0 50%, #e0e0e0 100%);
+    border-radius: 5px;
+    outline: none;
+    -webkit-appearance: none;
+    margin: 0.5rem 0;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #007bff;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.form-range::-webkit-slider-thumb:hover {
+    background: #0056b3;
+    transform: scale(1.2);
+}
+
+.form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #007bff;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.form-range::-moz-range-thumb:hover {
+    background: #0056b3;
+    transform: scale(1.2);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+}
+
+.range-labels small {
+    color: #999;
+    font-size: 0.75rem;
+}
+
+.form-label span {
+    color: #007bff;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* === Style dla wyœwietlania statystyk ¿ywieniowych === */
+.nutrition-stat {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+}
+
+.nutrition-stat .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #495057;
+}
+
+.nutrition-stat .stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.nutrition-stat .stat-value.text-primary {
+    color: #007bff !important;
+    font-size: 1.75rem;
+}
+

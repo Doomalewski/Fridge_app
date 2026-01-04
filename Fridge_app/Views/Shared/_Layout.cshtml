@@ -30,6 +30,11 @@
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {
+                            <li class="nav-item me-2">
+                                <a asp-controller="User" asp-action="AccountSettings" class="btn btn-outline-primary btn-sm" title="Ustawienia konta">
+                                    <i class="bi bi-gear"></i> Ustawienia
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <form asp-controller="User" asp-action="Logout" method="post" class="d-inline">
                                     <button type="submit" class="btn btn-danger btn-sm">Wyloguj</button>

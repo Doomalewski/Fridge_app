@@ -18,7 +18,6 @@ public class UserService
             query => query
                 .Include(u => u.Fridge)
                     .ThenInclude(sp => sp.Product)
-                .Include(u => u.Diet)
                 .Include(u=>u.CookingTools)
         );
     }
@@ -26,8 +25,7 @@ public class UserService
     {
         return await _userRepository.GetByConditionAsync(
             u => u.Email == email,
-            u => u.Fridge,
-            u => u.Diet
+            u => u.Fridge
         );
     }
 }

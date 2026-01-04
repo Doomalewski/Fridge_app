@@ -1,0 +1,465 @@
+{
+"diets": [
+  {
+    "name": "Brak diety",
+    "products": {
+      "meat": true,
+      "redMeat": true,
+      "whiteMeat": true,
+      "fish": true,
+      "seafood": true,
+      "shellfish": true,
+
+      "eggs": true,
+      "milk": true,
+      "cheese": true,
+      "yogurt": true,
+      "lactose": true,
+
+      "vegetables": true,
+      "fruits": true,
+      "legumes": true,
+      "nuts": true,
+      "seeds": true,
+
+      "grains": true,
+      "gluten": true,
+
+      "plantOils": true,
+      "animalFats": true,
+
+      "sugar": true,
+      "sweeteners": true,
+
+      "processedFoods": true,
+      "fermentedFoods": true,
+
+      "alcohol": true,
+      "caffeine": true,
+
+      "soy": true,
+      "peanuts": true
+    }
+  },
+
+  {
+    "name": "Omnivore",
+      "products": {
+        "meat": true,
+        "redMeat": true,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": true,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "Vegetarian",
+      "products": {
+        "meat": false,
+        "redMeat": false,
+        "whiteMeat": false,
+        "fish": false,
+        "seafood": false,
+        "shellfish": false,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": true,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": false,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "Vegan",
+      "products": {
+        "meat": false,
+        "redMeat": false,
+        "whiteMeat": false,
+        "fish": false,
+        "seafood": false,
+        "shellfish": false,
+
+        "eggs": false,
+        "milk": false,
+        "cheese": false,
+        "yogurt": false,
+        "lactose": false,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": false,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "Pescatarian",
+      "products": {
+        "meat": false,
+        "redMeat": false,
+        "whiteMeat": false,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": true,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": false,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "Flexitarian",
+      "products": {
+        "meat": true,
+        "redMeat": false,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": true,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "Keto",
+      "products": {
+        "meat": true,
+        "redMeat": true,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": false,
+        "cheese": true,
+        "yogurt": false,
+        "lactose": false,
+
+        "vegetables": true,
+        "fruits": false,
+        "legumes": false,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": false,
+        "gluten": false,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": false,
+        "sweeteners": true,
+
+        "processedFoods": false,
+        "fermentedFoods": true,
+
+        "alcohol": false,
+        "caffeine": true,
+
+        "soy": false,
+        "peanuts": false
+      }
+    },
+
+    {
+      "name": "LowCarb",
+      "products": {
+        "meat": true,
+        "redMeat": true,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": false,
+        "cheese": true,
+        "yogurt": false,
+        "lactose": false,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": false,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": false,
+        "gluten": false,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": false,
+        "sweeteners": true,
+
+        "processedFoods": false,
+        "fermentedFoods": true,
+
+        "alcohol": false,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "GlutenFree",
+      "products": {
+        "meat": true,
+        "redMeat": true,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": true,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": false,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "LactoseFree",
+      "products": {
+        "meat": true,
+        "redMeat": true,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": false,
+        "cheese": false,
+        "yogurt": false,
+        "lactose": false,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": true,
+
+        "sugar": true,
+        "sweeteners": true,
+
+        "processedFoods": true,
+        "fermentedFoods": true,
+
+        "alcohol": true,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    },
+
+    {
+      "name": "CleanEating",
+      "products": {
+        "meat": true,
+        "redMeat": false,
+        "whiteMeat": true,
+        "fish": true,
+        "seafood": true,
+        "shellfish": true,
+
+        "eggs": true,
+        "milk": true,
+        "cheese": false,
+        "yogurt": true,
+        "lactose": true,
+
+        "vegetables": true,
+        "fruits": true,
+        "legumes": true,
+        "nuts": true,
+        "seeds": true,
+
+        "grains": true,
+        "gluten": true,
+
+        "plantOils": true,
+        "animalFats": false,
+
+        "sugar": false,
+        "sweeteners": false,
+
+        "processedFoods": false,
+        "fermentedFoods": true,
+
+        "alcohol": false,
+        "caffeine": true,
+
+        "soy": true,
+        "peanuts": true
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 ﻿using Fridge_app.Data;
 using Fridge_app.Models.ViewModels;
 using Fridge_app.Models;
+using Fridge_app.Models.Enums;
 using Fridge_app.Exceptions;
 using Fridge_app.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,12 +16,20 @@ public class UserController : Controller
     private readonly UserService _userService;
     private readonly GeminiService _geminiService;
     private readonly IMealService _mealService;
-    public UserController(FridgeDbContext context, UserService userService, GeminiService geminiService,IMealService mealService)
+    private readonly NutritionCalculatorService _nutritionCalculator;
+    
+    public UserController(
+        FridgeDbContext context, 
+        UserService userService, 
+        GeminiService geminiService,
+        IMealService mealService,
+        NutritionCalculatorService nutritionCalculator)
     {
         _context = context;
         _userService = userService;
         _geminiService = geminiService;
         _mealService = mealService;
+        _nutritionCalculator = nutritionCalculator;
     }
 
     [HttpGet]
@@ -31,6 +40,7 @@ public class UserController : Controller
     var users = await _context.Users
   .Include(u => u.Fridge)
    .Include(u => u.CookingTools)
+   .Include(u => u.HumanStats)
      .OrderByDescending(u => u.Id)
    .ToListAsync();
 
@@ -64,7 +74,6 @@ public class UserController : Controller
             {
                 Email = model.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
-                Diet = null,
                 Fridge = null
             };
 
@@ -558,5 +567,333 @@ Description = model.Description,
             TempData["Error"] = $"Błąd usuwania przepisu: {ex.Message}";
   return RedirectToAction("MyMeals");
   }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AccountSettings()
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _context.Users
+                .Include(u => u.HumanStats)
+                    .ThenInclude(hs => hs.Weight)
+                .Include(u => u.NutritionTargets)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                TempData["Error"] = "Użytkownik nie został znaleziony";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Wczytaj typy diet z diets.json
+            var dietsJsonPath = Path.Combine(Directory.GetCurrentDirectory(), "diets.json");
+            var dietsJson = await System.IO.File.ReadAllTextAsync(dietsJsonPath);
+            var dietsData = System.Text.Json.JsonDocument.Parse(dietsJson);
+            var dietTypes = dietsData.RootElement
+                .GetProperty("diets")
+                .EnumerateArray()
+                .Select(d => d.GetProperty("name").GetString())
+                .ToList();
+
+            // Pobierz aktywny cel żywieniowy
+            var activeNutritionTarget = user.NutritionTargets?
+                .Where(nt => nt.ValidTo == null || nt.ValidTo > DateTime.UtcNow)
+                .OrderByDescending(nt => nt.ValidFrom)
+                .FirstOrDefault();
+
+            // Odczytaj ActivityLevel z TempData (po obliczeniu) lub z bazy
+            ActivityLevel? activityLevel = null;
+            if (TempData["ActivityLevel"] != null && int.TryParse(TempData["ActivityLevel"].ToString(), out var activityLevelInt))
+            {
+                activityLevel = (ActivityLevel)activityLevelInt;
+            }
+            else if (activeNutritionTarget != null)
+            {
+                // Odczytaj z bazy jeśli nie ma w TempData
+                activityLevel = activeNutritionTarget.ActivityLevel;
+            }
+
+            // Odczytaj obliczone wartości z TempData (z preview) lub z bazy
+            int? calculatedCalories = null;
+            double? calculatedProtein = null;
+            double? calculatedFat = null;
+            double? calculatedCarbs = null;
+            double? bmr = null;
+            double? tdee = null;
+
+            // Z TempData (po obliczeniu preview)
+            if (TempData["CalculatedCalories"] != null && int.TryParse(TempData["CalculatedCalories"].ToString(), out var caloriesInt))
+                calculatedCalories = caloriesInt;
+            else
+                calculatedCalories = activeNutritionTarget?.CaloriesPerDay;
+
+            if (TempData["CalculatedProtein"] is string proteinStr && double.TryParse(proteinStr, out var proteinVal))
+                calculatedProtein = proteinVal;
+            else
+                calculatedProtein = activeNutritionTarget?.ProteinGrams;
+
+            if (TempData["CalculatedFat"] is string fatStr && double.TryParse(fatStr, out var fatVal))
+                calculatedFat = fatVal;
+            else
+                calculatedFat = activeNutritionTarget?.FatGrams;
+
+            if (TempData["CalculatedCarbs"] is string carbsStr && double.TryParse(carbsStr, out var carbsVal))
+                calculatedCarbs = carbsVal;
+            else
+                calculatedCarbs = activeNutritionTarget?.CarbsGrams;
+
+            if (TempData["BMR"] is string bmrStr && double.TryParse(bmrStr, out var bmrVal))
+                bmr = bmrVal;
+
+            if (TempData["TDEE"] is string tdeeStr && double.TryParse(tdeeStr, out var tdeeVal))
+                tdee = tdeeVal;
+
+            // Odczytaj dane formularza z TempData (po preview) lub z bazy
+            var age = TempData["Age"] != null ? (int?)int.Parse(TempData["Age"].ToString()) : user.HumanStats?.Age;
+            var height = TempData["Height"] != null ? (float?)float.Parse(TempData["Height"].ToString()) : user.HumanStats?.Height;
+            var currentWeight = TempData["CurrentWeight"] != null ? (float?)float.Parse(TempData["CurrentWeight"].ToString()) : user.HumanStats?.Weight?.OrderByDescending(w => w.Date).FirstOrDefault()?.Weight;
+            var sex = TempData["Sex"]?.ToString() ?? user.HumanStats?.Sex;
+            var nutritionGoal = TempData["NutritionGoal"] != null ? (GoalType?)(GoalType)int.Parse(TempData["NutritionGoal"].ToString()) : activeNutritionTarget?.Goal;
+            var selectedDietType = TempData["SelectedDietType"]?.ToString() ?? user.HumanStats?.Diet; // ✅ Zmieniono na HumanStats.Diet
+
+            var model = new AccountSettingsViewModel
+            {
+                Email = user.Email,
+                SelectedDietType = selectedDietType,
+                AvailableDietTypes = dietTypes,
+                Age = age,
+                Height = height,
+                CurrentWeight = currentWeight,
+                Sex = sex,
+                Goal = user.HumanStats?.Goal,
+                ActivityLevel = activityLevel,
+                NutritionGoal = nutritionGoal,
+                CalculatedCalories = calculatedCalories,
+                CalculatedProtein = calculatedProtein,
+                CalculatedFat = calculatedFat,
+                CalculatedCarbs = calculatedCarbs,
+                BMR = bmr,
+                TDEE = tdee
+            };
+
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd wczytywania ustawień: {ex.Message}";
+            return RedirectToAction("Index", "Home");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AccountSettings(AccountSettingsViewModel model)
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var user = await _context.Users
+                .Include(u => u.HumanStats)
+                    .ThenInclude(hs => hs.Weight)
+                .Include(u => u.NutritionTargets)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                TempData["Error"] = "Użytkownik nie został znaleziony";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Waliduj dane wymagane
+            if (!model.Age.HasValue || !model.Height.HasValue || !model.CurrentWeight.HasValue || 
+                string.IsNullOrEmpty(model.Sex) || !model.ActivityLevel.HasValue || !model.NutritionGoal.HasValue)
+            {
+                TempData["Error"] = "Proszę wypełnić wszystkie wymagane pola.";
+                
+                // Wczytaj diety dla formularza
+                var dietsJsonPath = Path.Combine(Directory.GetCurrentDirectory(), "diets.json");
+                var dietsJson = await System.IO.File.ReadAllTextAsync(dietsJsonPath);
+                var dietsData = System.Text.Json.JsonDocument.Parse(dietsJson);
+                model.AvailableDietTypes = dietsData.RootElement
+                    .GetProperty("diets")
+                    .EnumerateArray()
+                    .Select(d => d.GetProperty("name").GetString())
+                    .ToList();
+                
+                return View(model);
+            }
+
+            // Aktualizuj lub utwórz dietę - teraz w HumanStats
+            // Nie trzeba już tworzyć osobnej tabeli Diet
+            
+            // Aktualizuj lub utwórz statystyki użytkownika
+            if (user.HumanStats == null)
+            {
+                user.HumanStats = new HumanStats
+                {
+                    Weight = new List<WeightEntry>()
+                };
+                _context.HumanStats.Add(user.HumanStats);
+            }
+
+            user.HumanStats.Age = model.Age.Value;
+            user.HumanStats.Height = model.Height.Value;
+            user.HumanStats.Sex = model.Sex;
+            user.HumanStats.Goal = model.Goal ?? model.NutritionGoal.ToString();
+            user.HumanStats.Diet = string.IsNullOrWhiteSpace(model.SelectedDietType) ? "Brak diety" : model.SelectedDietType;
+
+            // Dodaj nowy wpis wagi
+            var latestWeight = user.HumanStats.Weight?.OrderByDescending(w => w.Date).FirstOrDefault();
+            if (latestWeight == null || Math.Abs(latestWeight.Weight - model.CurrentWeight.Value) > 0.01)
+            {
+                var newWeightEntry = new WeightEntry
+                {
+                    Date = DateTime.UtcNow,
+                    Weight = model.CurrentWeight.Value
+                };
+                user.HumanStats.Weight.Add(newWeightEntry);
+            }
+
+            // Zapisz zmiany HumanStats do bazy
+            await _context.SaveChangesAsync();
+
+            // OBLICZENIE lub UŻYCIE OBLICZONYCH CELÓW ŻYWIENIOWYCH
+            NutritionCalculationResult nutritionResult;
+            
+            // Jeśli mamy już obliczone wartości z preview (hidden inputs)
+            if (model.CalculatedCalories.HasValue && model.CalculatedProtein.HasValue && 
+                model.CalculatedFat.HasValue && model.CalculatedCarbs.HasValue)
+            {
+                // Użyj wartości z formularza
+                nutritionResult = new NutritionCalculationResult
+                {
+                    TargetCalories = model.CalculatedCalories.Value,
+                    ProteinGrams = model.CalculatedProtein.Value,
+                    FatGrams = model.CalculatedFat.Value,
+                    CarbsGrams = model.CalculatedCarbs.Value,
+                    BMR = model.BMR ?? 0,
+                    TDEE = model.TDEE ?? 0,
+                    ActivityLevel = model.ActivityLevel.Value,
+                    Goal = model.NutritionGoal.Value
+                };
+            }
+            else
+            {
+                // Oblicz na nowo jeśli nie ma obliczonych wartości
+                nutritionResult = _nutritionCalculator.CalculateNutritionTargets(
+                    weightKg: (double)model.CurrentWeight.Value,
+                    heightCm: (double)model.Height.Value,
+                    age: model.Age.Value,
+                    sex: model.Sex,
+                    activityLevel: model.ActivityLevel.Value,
+                    goal: model.NutritionGoal.Value
+                );
+            }
+
+            // Zakończ poprzedni aktywny cel
+            var activeCurrent = user.NutritionTargets?
+                .Where(nt => nt.ValidTo == null || nt.ValidTo > DateTime.UtcNow)
+                .ToList();
+            
+            if (activeCurrent != null)
+            {
+                foreach (var target in activeCurrent)
+                {
+                    target.ValidTo = DateTime.UtcNow;
+                }
+            }
+
+            // Utwórz i zapisz nowy cel żywieniowy do bazy
+            var newTarget = new NutritionTarget
+            {
+                UserId = userId,
+                Goal = model.NutritionGoal.Value,
+                ActivityLevel = model.ActivityLevel.Value,
+                CaloriesPerDay = nutritionResult.TargetCalories,
+                ProteinGrams = nutritionResult.ProteinGrams,
+                FatGrams = nutritionResult.FatGrams,
+                CarbsGrams = nutritionResult.CarbsGrams,
+                ValidFrom = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            user.NutritionTargets.Add(newTarget);
+
+            // Zapisz nowy NutritionTarget do bazy
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Ustawienia zapisane! Kalorie: {nutritionResult.TargetCalories} kcal, Białko: {nutritionResult.ProteinGrams:F0}g, Tłuszcze: {nutritionResult.FatGrams:F0}g, Węglowodany: {nutritionResult.CarbsGrams:F0}g";
+            return RedirectToAction("AccountSettings");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd zapisywania ustawień: {ex.Message}";
+            
+            // Ponownie wczytaj diety z JSON dla formularza
+            var dietsJsonPath = Path.Combine(Directory.GetCurrentDirectory(), "diets.json");
+            var dietsJson = await System.IO.File.ReadAllTextAsync(dietsJsonPath);
+            var dietsData = System.Text.Json.JsonDocument.Parse(dietsJson);
+            model.AvailableDietTypes = dietsData.RootElement
+                .GetProperty("diets")
+                .EnumerateArray()
+                .Select(d => d.GetProperty("name").GetString())
+                .ToList();
+            
+            return View(model);
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CalculateNutritionPreview(
+        int age, 
+        float height, 
+        float currentWeight, 
+        string sex, 
+        int activityLevel, 
+        int nutritionGoal,
+        string selectedDietType = "")
+    {
+        try
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Oblicz cele żywieniowe
+            var result = _nutritionCalculator.CalculateNutritionTargets(
+                weightKg: (double)currentWeight,
+                heightCm: (double)height,
+                age: age,
+                sex: sex,
+                activityLevel: (ActivityLevel)activityLevel,
+                goal: (GoalType)nutritionGoal
+            );
+
+            // Zapisz wyniki do TempData
+            TempData["CalculatedCalories"] = result.TargetCalories;
+            TempData["CalculatedProtein"] = result.ProteinGrams.ToString("F1");
+            TempData["CalculatedFat"] = result.FatGrams.ToString("F1");
+            TempData["CalculatedCarbs"] = result.CarbsGrams.ToString("F1");
+            TempData["BMR"] = result.BMR.ToString("F0");
+            TempData["TDEE"] = result.TDEE.ToString("F0");
+            TempData["ActivityLevel"] = activityLevel;
+            
+            // Zapisz parametry formularza
+            TempData["Age"] = age;
+            TempData["Height"] = height.ToString("F1");
+            TempData["CurrentWeight"] = currentWeight.ToString("F1");
+            TempData["Sex"] = sex;
+            TempData["NutritionGoal"] = nutritionGoal;
+            TempData["SelectedDietType"] = selectedDietType;
+
+            TempData["Info"] = "Cele żywieniowe obliczone! Kliknij 'Zapisz wszystkie ustawienia' aby zapisać do bazy.";
+            return RedirectToAction("AccountSettings");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Błąd obliczania: {ex.Message}";
+            return RedirectToAction("AccountSettings");
+        }
     }
 }

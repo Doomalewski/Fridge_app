@@ -56,9 +56,9 @@
         <span class="badge bg-success">@(user.CookingTools?.Count() ?? 0)</span>
        </td>
        <td>
-     @if (user.Diet != null && !string.IsNullOrEmpty(user.Diet.DietType))
+     @if (user.HumanStats != null && !string.IsNullOrEmpty(user.HumanStats.Diet))
              {
-   <span class="badge bg-warning">@user.Diet.DietType</span>
+   <span class="badge bg-warning">@user.HumanStats.Diet</span>
            }
      else
        {

@@ -3,6 +3,7 @@ using System;
 using Fridge_app.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     [DbContext(typeof(FridgeDbContext))]
-    partial class FridgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104164730_AddDietToHumanStats")]
+    partial class AddDietToHumanStats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -425,6 +428,9 @@ namespace Fridge_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("DietId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -437,6 +443,8 @@ namespace Fridge_app.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DietId");
 
                     b.HasIndex("HumanStatsId");
 
@@ -618,9 +626,15 @@ namespace Fridge_app.Migrations
 
             modelBuilder.Entity("Fridge_app.Models.User", b =>
                 {
+                    b.HasOne("Fridge_app.Models.Diet", "Diet")
+                        .WithMany()
+                        .HasForeignKey("DietId");
+
                     b.HasOne("Fridge_app.Models.HumanStats", "HumanStats")
                         .WithMany()
                         .HasForeignKey("HumanStatsId");
+
+                    b.Navigation("Diet");
 
                     b.Navigation("HumanStats");
                 });

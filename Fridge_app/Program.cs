@@ -35,6 +35,7 @@ builder.Services.AddScoped<IRepository<Meal>, EfCoreRepository<Meal>>();
 builder.Services.AddScoped<IRepository<Recipe>, EfCoreRepository<Recipe>>();
 builder.Services.AddScoped<IRepository<ProductWithAmount>, EfCoreRepository<ProductWithAmount>>();
 builder.Services.AddScoped<GeminiService>();
+builder.Services.AddScoped<NutritionCalculatorService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {

@@ -3,6 +3,7 @@ using System;
 using Fridge_app.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fridge_app.Migrations
 {
     [DbContext(typeof(FridgeDbContext))]
-    partial class FridgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104154528_AddUserHumanStatsRelation")]
+    partial class AddUserHumanStatsRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,51 +61,12 @@ namespace Fridge_app.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("RulesJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<double>("TimeSpan")
                         .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
                     b.ToTable("Diets");
-                });
-
-            modelBuilder.Entity("Fridge_app.Models.DietProductRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DietId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsAllowed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProductCategory")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DietId", "ProductCategory")
-                        .IsUnique();
-
-                    b.ToTable("DietProductRules");
                 });
 
             modelBuilder.Entity("Fridge_app.Models.HumanStats", b =>
@@ -115,11 +79,6 @@ namespace Fridge_app.Migrations
 
                     b.Property<int>("Age")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Diet")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Goal")
                         .IsRequired()
@@ -171,62 +130,6 @@ namespace Fridge_app.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Meals");
-                });
-
-            modelBuilder.Entity("Fridge_app.Models.NutritionTarget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActivityLevel")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CaloriesPerDay")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("CarbsGrams")
-                        .HasColumnType("double precision");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DietId")
-                        .HasColumnType("integer");
-
-                    b.Property<double>("FatGrams")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("Goal")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<double>("ProteinGrams")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ValidTo")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DietId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("NutritionTargets");
                 });
 
             modelBuilder.Entity("Fridge_app.Models.Product", b =>
@@ -425,6 +328,9 @@ namespace Fridge_app.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("DietId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -437,6 +343,8 @@ namespace Fridge_app.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DietId");
 
                     b.HasIndex("HumanStatsId");
 
@@ -512,17 +420,6 @@ namespace Fridge_app.Migrations
                     b.ToTable("UserCookingTools", (string)null);
                 });
 
-            modelBuilder.Entity("Fridge_app.Models.DietProductRule", b =>
-                {
-                    b.HasOne("Fridge_app.Models.Diet", "Diet")
-                        .WithMany("ProductRules")
-                        .HasForeignKey("DietId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Diet");
-                });
-
             modelBuilder.Entity("Fridge_app.Models.Meal", b =>
                 {
                     b.HasOne("Fridge_app.Models.Diet", null)
@@ -541,28 +438,6 @@ namespace Fridge_app.Migrations
                         .IsRequired();
 
                     b.Navigation("Recipe");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Fridge_app.Models.NutritionTarget", b =>
-                {
-                    b.HasOne("Fridge_app.Models.Diet", "Diet")
-                        .WithMany()
-                        .HasForeignKey("DietId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Fridge_app.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Fridge_app.Models.User", null)
-                        .WithMany("NutritionTargets")
-                        .HasForeignKey("UserId1");
-
-                    b.Navigation("Diet");
 
                     b.Navigation("User");
                 });
@@ -618,9 +493,15 @@ namespace Fridge_app.Migrations
 
             modelBuilder.Entity("Fridge_app.Models.User", b =>
                 {
+                    b.HasOne("Fridge_app.Models.Diet", "Diet")
+                        .WithMany()
+                        .HasForeignKey("DietId");
+
                     b.HasOne("Fridge_app.Models.HumanStats", "HumanStats")
                         .WithMany()
                         .HasForeignKey("HumanStatsId");
+
+                    b.Navigation("Diet");
 
                     b.Navigation("HumanStats");
                 });
@@ -681,8 +562,6 @@ namespace Fridge_app.Migrations
             modelBuilder.Entity("Fridge_app.Models.Diet", b =>
                 {
                     b.Navigation("Meals");
-
-                    b.Navigation("ProductRules");
                 });
 
             modelBuilder.Entity("Fridge_app.Models.HumanStats", b =>
@@ -700,8 +579,6 @@ namespace Fridge_app.Migrations
             modelBuilder.Entity("Fridge_app.Models.User", b =>
                 {
                     b.Navigation("Fridge");
-
-                    b.Navigation("NutritionTargets");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,11 +16,11 @@ namespace Fridge_app.Data
         public DbSet<Meal> Meals { get; set; }
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<ProductWithAmount> ProductWithAmounts { get; set; }
-        public DbSet<Diet> Diets { get; set; }
         public DbSet<HumanStats> HumanStats { get; set; }
         public DbSet<WeightEntry> WeightEntries { get; set; }
-
         public DbSet<CookingTool> CookingTools { get; set; }
+        public DbSet<NutritionTarget> NutritionTargets { get; set; }
+
         public FridgeDbContext(DbContextOptions<FridgeDbContext> options)
             : base(options)
         {
@@ -93,13 +93,6 @@ namespace Fridge_app.Data
                 .HasForeignKey(sp => sp.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // === Diet ===
-            modelBuilder.Entity<Diet>()
-                .HasMany(d => d.Meals)
-                .WithOne()
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Meal>()
                 .HasMany(m => m.Tags)
                 .WithMany(t => t.Meals)
@@ -147,6 +140,13 @@ namespace Fridge_app.Data
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // === NutritionTarget ===
+            modelBuilder.Entity<NutritionTarget>()
+                .HasOne(nt => nt.User)
+                .WithMany()
+                .HasForeignKey(nt => nt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // === Optional: Configure Value Conversion ===
             modelBuilder.Entity<Product>()
                 .Property(p => p.ProductCategory)
@@ -158,6 +158,10 @@ namespace Fridge_app.Data
 
             modelBuilder.Entity<Tag>()
                 .Property(t => t.Type)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<NutritionTarget>()
+                .Property(nt => nt.Goal)
                 .HasConversion<string>();
         }
     }

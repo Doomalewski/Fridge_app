@@ -16,6 +16,10 @@ namespace Fridge_app.Models
         public string Sex { get; set; }
 
         public string Goal { get; set; }
+
+        [MaxLength(100)]
+        public string Diet { get; set; }
     }
 
 }
+
