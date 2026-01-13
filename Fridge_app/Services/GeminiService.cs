@@ -6,6 +6,8 @@ using Fridge_app.Exceptions;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
+using System.Globalization;
+using Newtonsoft.Json.Linq;
 
 namespace Fridge_app.Services
 {
@@ -77,7 +79,7 @@ namespace Fridge_app.Services
          Environment.NewLine + "---" + Environment.NewLine +
        "Zasady:" + Environment.NewLine +
       "- OdpowiedŸ MUSI byæ czystym JSON-em bez komentarzy, opisu, ani dodatkowego tekstu." + Environment.NewLine +
-           "- Wszystkie wartoœci tekstowe w podwójnych cudzys³owach." + Environment.NewLine +
+           "- Wszystkie wartoœci tekstowe w podwójnych cudz³ach." + Environment.NewLine +
               "- Difficulty: tylko Easy, Medium, Hard." + Environment.NewLine +
            "- Category: tylko Breakfast, Lunch, Dinner, Snack, Other." + Environment.NewLine +
            "- Amount podawaj w gramach lub mililitrach (bez jednostek, tylko liczba)." + Environment.NewLine +
@@ -142,6 +144,162 @@ namespace Fridge_app.Services
             {
                 throw new ApplicationException("B³¹d przetwarzania odpowiedzi AI", ex);
             }
+        }
+
+        public async Task<List<ShoppingListItemViewModel>> GenerateShoppingListAsync(ShoppingListViewModel request)
+        {
+            var budgetInfo = request.Budget.HasValue
+                ? $"{request.Budget.Value:0.##} PLN"
+                : "brak okreœlonego limitu";
+
+            var cuisineInfo = string.IsNullOrWhiteSpace(request.Cuisine)
+                ? "dowolna"
+                : request.Cuisine;
+
+            var dishInfo = string.IsNullOrWhiteSpace(request.DesiredDish)
+                ? "brak konkretnego dania"
+                : request.DesiredDish;
+
+            var notesInfo = string.IsNullOrWhiteSpace(request.AdditionalNotes)
+                ? "brak dodatkowych preferencji"
+                : request.AdditionalNotes;
+
+            var prompt = "Przygotuj listê zakupów w jêzyku polskim na podstawie poni¿szych danych wejœciowych. " +
+                         "Zwróæ czysty JSON bez komentarzy ani dodatkowego tekstu." + Environment.NewLine +
+                         $"Bud¿et: {budgetInfo}{Environment.NewLine}" +
+                         $"Rodzaj kuchni: {cuisineInfo}{Environment.NewLine}" +
+                         $"Planowane danie / cel zakupów: {dishInfo}{Environment.NewLine}" +
+                         $"Uwagi: {notesInfo}{Environment.NewLine}" +
+                         "JSON schema: {\"items\":[{\"name\":\"string\",\"quantity\":\"string\",\"category\":\"string\"}]}" + Environment.NewLine +
+                         "Zasady:" + Environment.NewLine +
+                         "- Maksymalnie 15 pozycji." + Environment.NewLine +
+                         "- Iloœci podawaj w sensownych jednostkach: g/ml dla produktów na wagê, sztuki/opakowania/butelki/puszki/kartony dla reszty (np. butelka oliwy, paczka ry¿u, bochenek chleba)." + Environment.NewLine +
+                         "- Unikaj gramów tam, gdzie typowo kupuje siê produkt w opakowaniu (nie \"100g oliwy\", tylko \"butelka oliwy\")." + Environment.NewLine +
+                         "- Dopasuj listê do bud¿etu (tañsze zamienniki gdy trzeba)." + Environment.NewLine +
+                         "- Preferuj sk³adniki ³atwo dostêpne w Polsce." + Environment.NewLine +
+                         "- Zwróæ TYLKO JSON dok³adnie w podanym schemacie.";
+
+            try
+            {
+                var response = await _model.GenerateContentAsync(prompt);
+                var jsonResponse = CleanJsonResponse(response?.Text);
+
+                var aiResult = JsonConvert.DeserializeObject<ShoppingListAiResponse>(jsonResponse);
+                if (aiResult?.Items == null || !aiResult.Items.Any())
+                {
+                    throw new ApplicationException("AI nie zwróci³o pozycji listy zakupów.");
+                }
+
+                return aiResult.Items;
+            }
+            catch (JsonException ex)
+            {
+                throw new ApplicationException("Nie uda³o siê przetworzyæ odpowiedzi AI dla listy zakupów.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("B³¹d generowania listy zakupów", ex);
+            }
+        }
+
+        public async Task<(decimal min, decimal max)> EstimateShoppingListCostAsync(ShoppingList list)
+        {
+            if (list?.Items == null || !list.Items.Any())
+                return (0m, 0m);
+
+            try
+            {
+                var itemsDescription = string.Join(", ", list.Items.Select(i =>
+                {
+                    var qty = string.IsNullOrWhiteSpace(i.Quantity) ? "1 szt" : i.Quantity;
+                    var category = string.IsNullOrWhiteSpace(i.Category) ? string.Empty : $" ({i.Category})";
+                    return $"{i.Name} ({qty}{category})";
+                }));
+
+                var budgetInfo = list.Budget.HasValue ? $"{list.Budget.Value:0.##} PLN" : "brak bud¿etu";
+                var cuisineInfo = string.IsNullOrWhiteSpace(list.Cuisine) ? "dowolna" : list.Cuisine;
+                var dishInfo = string.IsNullOrWhiteSpace(list.DesiredDish) ? "brak" : list.DesiredDish;
+
+                var prompt =
+                    "Oszacuj realny minimalny i maksymalny ³¹czny koszt zakupów (PLN) dla poni¿szej listy w typowych polskich marketach. " +
+                    "Uwzglêdnij orientacyjne ceny popularnych marek i marek w³asnych, bez luksusowych produktów. " +
+                    "Zwróæ TYLKO czysty JSON bez komentarzy w formacie {\"min\": number, \"max\": number} z kropk¹ jako separatorem dziesiêtnym.\n" +
+                    $"Bud¿et u¿ytkownika: {budgetInfo}\n" +
+                    $"Preferowana kuchnia: {cuisineInfo}\n" +
+                    $"Planowane danie/cel zakupów: {dishInfo}\n" +
+                    $"Pozycje listy: {itemsDescription}\n" +
+                    "Zasady: (1) nie dodawaj waluty w wartoœciach, (2) nie dodawaj komentarzy, (3) min <= max.";
+
+                var response = await _model.GenerateContentAsync(prompt);
+                var jsonResponse = CleanJsonResponse(response?.Text);
+
+                if (string.IsNullOrWhiteSpace(jsonResponse))
+                    return (0m, 0m);
+
+                var estimate = JsonConvert.DeserializeObject<ShoppingListCostEstimate>(jsonResponse);
+                if (estimate != null && (estimate.Min > 0 || estimate.Max > 0))
+                {
+                    return NormalizeEstimate(estimate.Min, estimate.Max);
+                }
+
+                var token = JToken.Parse(jsonResponse);
+                var minToken = token["min"] ?? token["estimatedMin"] ?? token["low"] ?? token["minPrice"];
+                var maxToken = token["max"] ?? token["estimatedMax"] ?? token["high"] ?? token["maxPrice"];
+
+                var min = ParseDecimal(minToken);
+                var max = ParseDecimal(maxToken);
+
+                return NormalizeEstimate(min, max);
+            }
+            catch
+            {
+                return (0m, 0m);
+            }
+        }
+
+        private static (decimal min, decimal max) NormalizeEstimate(decimal min, decimal max)
+        {
+            if (min < 0) min = 0;
+            if (max < 0) max = 0;
+            if (max == 0 && min > 0) max = min;
+            if (max < min) max = min;
+            return (min, max);
+        }
+
+        private static decimal ParseDecimal(JToken? token)
+        {
+            if (token == null) return 0m;
+            if (token.Type == JTokenType.Float || token.Type == JTokenType.Integer)
+            {
+                return token.Value<decimal>();
+            }
+
+            var raw = token.ToString();
+            if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var value))
+            {
+                return value;
+            }
+
+            if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.GetCultureInfo("pl-PL"), out value))
+            {
+                return value;
+            }
+
+            return 0m;
+        }
+
+        private class ShoppingListAiResponse
+        {
+            public List<ShoppingListItemViewModel> Items { get; set; } = new();
+        }
+
+        private class ShoppingListCostEstimate
+        {
+            [JsonProperty("min")]
+            public decimal Min { get; set; }
+
+            [JsonProperty("max")]
+            public decimal Max { get; set; }
         }
 
         private string BuildPreferencesString(MealGenerationPreferencesViewModel? preferences)

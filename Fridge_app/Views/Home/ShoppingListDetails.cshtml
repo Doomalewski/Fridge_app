@@ -1,0 +1,128 @@
+@model Fridge_app.Models.ViewModels.ShoppingListDetailsViewModel
+@using System.Globalization
+@{
+    var pl = CultureInfo.GetCultureInfo("pl-PL");
+    ViewData["Title"] = "Lista zakupowa";
+}
+<link rel="stylesheet" href="~/css/home.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">@Model.List.Name</h1>
+                <p class="welcome-subtitle">Utworzono: @Model.List.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+                @if (Model.List.IsCompleted)
+                {
+                    <span class="badge bg-success">Zrealizowana @Model.List.CompletedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                }
+            </div>
+        </div>
+        <a asp-action="ShoppingLists" class="btn btn-link">? Wróæ</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="shopping-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="row w-100">
+                <div class="col-md-4"><strong>Bud¿et:</strong> @(Model.List.Budget?.ToString("C", pl) ?? "brak")</div>
+                <div class="col-md-4"><strong>Kuchnia:</strong> @(string.IsNullOrWhiteSpace(Model.List.Cuisine) ? "dowolna" : Model.List.Cuisine)</div>
+                <div class="col-md-4"><strong>Plan:</strong> @(string.IsNullOrWhiteSpace(Model.List.DesiredDish) ? "brak" : Model.List.DesiredDish)</div>
+            </div>
+            <form asp-action="CompleteShoppingList" method="post" class="ms-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.List.Id" />
+                <button type="submit" class="btn btn-success" @(Model.List.IsCompleted ? "disabled" : string.Empty)>
+                    <i class="bi bi-check2-circle"></i> Oznacz jako zrealizowan¹ (dodaj do lodówki)
+                </button>
+            </form>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>Szacowany koszt (AI):</strong>
+                @if (Model.EstimatedMin == 0 && Model.EstimatedMax == 0)
+                {
+                    <span class="text-muted">brak danych</span>
+                }
+                else if (Model.EstimatedMin == Model.EstimatedMax)
+                {
+                    @Model.EstimatedMin.ToString("C", pl)
+                }
+                else
+                {
+                    @($"{Model.EstimatedMin.ToString("C", pl)} - {Model.EstimatedMax.ToString("C", pl)}")
+                }
+            </div>
+            <div class="col-md-6 text-muted">Szacunek generowany przez AI (orientacyjny).</div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.List.AdditionalNotes))
+        {
+            <div class="mb-3"><strong>Uwagi:</strong> @Model.List.AdditionalNotes</div>
+        }
+
+        <div class="generated-list-card mt-3">
+            <div class="generated-list-header">
+                <div>
+                    <h4 class="mb-1">Pozycje listy</h4>
+                    <p class="text-muted mb-0">£¹cznie: @Model.List.Items?.Count()</p>
+                </div>
+            </div>
+
+            <div class="items-list">
+                @if (Model.List.Items == null || !Model.List.Items.Any())
+                {
+                    <p class="text-muted">Brak pozycji.</p>
+                }
+                else
+                {
+                    foreach (var item in Model.List.Items)
+                    {
+                        <div class="item-row">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-4">
+                                    <div class="text-muted small">Produkt</div>
+                                    <div>@item.Name</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-muted small">Iloœæ</div>
+                                    <div>@item.Quantity</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="text-muted small">Kategoria</div>
+                                    <div>@item.Category</div>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-center gap-2">
+                                    @if (item.IsAddedToFridge)
+                                    {
+                                        <span class="badge bg-success">Dodano do lodówki</span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="AddItemToFridge" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="itemId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-primary btn-sm" @(Model.List.IsCompleted ? "disabled" : string.Empty)>
+                                                <i class="bi bi-box-arrow-in-down"></i> Dodaj do lodówki
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

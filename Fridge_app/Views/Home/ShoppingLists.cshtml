@@ -1,0 +1,67 @@
+@model IEnumerable<Fridge_app.Models.ViewModels.ShoppingListSummaryViewModel>
+@{
+    ViewData["Title"] = "Listy zakupowe";
+}
+<link rel="stylesheet" href="~/css/home.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">Listy zakupowe</h1>
+                <p class="welcome-subtitle">Planuj zakupy i kontroluj brakuj¹ce produkty</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-primary-light">
+                <i class="bi bi-clipboard-plus"></i>
+            </div>
+            <div class="card-content">
+                <h3>Utwórz now¹ listê</h3>
+                <p>Przygotuj listê zakupów na nadchodz¹cy tydzieñ lub konkretne wydarzenie.</p>
+            </div>
+            <a asp-controller="Home" asp-action="CreateShoppingList" class="card-link">Rozpocznij</a>
+        </div>
+
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-success-light">
+                <i class="bi bi-collection"></i>
+            </div>
+            <div class="card-content">
+                <h3>Twoje listy</h3>
+                <p>Zapisane listy zakupowe w osobnym widoku.</p>
+            </div>
+            <a asp-controller="Home" asp-action="MyShoppingLists" class="card-link">Otwórz zapisane</a>
+        </div>
+
+        <div class="dashboard-card animate">
+            <div class="card-icon bg-info-light">
+                <i class="bi bi-lightbulb"></i>
+            </div>
+            <div class="card-content">
+                <h3>Brakuje produktów?</h3>
+                <p>SprawdŸ lodówkê i dodaj produkty, których brakuje do kolejnych zakupów.</p>
+            </div>
+            <a asp-controller="Fridge" asp-action="Index" class="card-link">SprawdŸ lodówkê</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 150);
+            });
+        });
+    </script>
+}

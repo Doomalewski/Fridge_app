@@ -20,6 +20,8 @@ namespace Fridge_app.Data
         public DbSet<WeightEntry> WeightEntries { get; set; }
         public DbSet<CookingTool> CookingTools { get; set; }
         public DbSet<NutritionTarget> NutritionTargets { get; set; }
+        public DbSet<ShoppingList> ShoppingLists { get; set; }
+        public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
 
         public FridgeDbContext(DbContextOptions<FridgeDbContext> options)
             : base(options)
@@ -147,6 +149,18 @@ namespace Fridge_app.Data
                 .HasForeignKey(nt => nt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // === ShoppingList ===
+            modelBuilder.Entity<ShoppingList>()
+                .HasMany(sl => sl.Items)
+                .WithOne(i => i.ShoppingList)
+                .HasForeignKey(i => i.ShoppingListId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ShoppingList>()
+                .HasOne(sl => sl.User)
+                .WithMany(u => u.ShoppingLists)
+                .HasForeignKey(sl => sl.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             // === Optional: Configure Value Conversion ===
             modelBuilder.Entity<Product>()
                 .Property(p => p.ProductCategory)

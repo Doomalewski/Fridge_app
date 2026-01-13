@@ -182,6 +182,12 @@
         transform: scale(1.05);
     }
 
+    .card-link.disabled,
+    .card-link[disabled] {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+
 /* === Animacje === */
 @keyframes fadeInPage {
     from {
@@ -297,4 +303,56 @@
 .btn-lg {
     padding: 1rem 2rem;
     font-size: 1.1rem;
+}
+
+/* === Shopping list creator === */
+.shopping-card {
+    background: #fff;
+    border-radius: 1.3rem;
+    padding: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid #d1d1d1;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem 1.5rem;
+}
+
+.form-group.full-row {
+    grid-column: 1 / -1;
+}
+
+.generated-list-card {
+    background: linear-gradient(180deg, #f8fbff, #ffffff);
+    border-radius: 1.1rem;
+    padding: 1.5rem;
+    border: 1px solid #dfe8f3;
+}
+
+.generated-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.item-row {
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    border-radius: 0.9rem;
+    padding: 0.9rem 0.8rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.form-actions .btn {
+    min-width: 160px;
 }

@@ -1,0 +1,179 @@
+@model Fridge_app.Models.ViewModels.ShoppingListViewModel
+@{
+    ViewData["Title"] = "Nowa lista zakupowa";
+}
+
+<link rel="stylesheet" href="~/css/home.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-clipboard-plus"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">Nowa lista zakupów</h1>
+                <p class="welcome-subtitle">Okreœl bud¿et, kuchniê i danie, a Gemini AI zbuduje propozycjê listy</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="shopping-card">
+        <form asp-action="CreateShoppingList" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="np. Zakupy na weekend" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Budget" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="Budget" type="number" step="0.01" class="form-control" placeholder="np. 200" />
+                        <span class="input-group-text">PLN</span>
+                    </div>
+                    <span asp-validation-for="Budget" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Cuisine" class="form-label"></label>
+                    <select asp-for="Cuisine" class="form-select">
+                        <option value="">Dowolna</option>
+                        @foreach (var cuisine in Model.AvailableCuisines)
+                        {
+                            <option value="@cuisine" selected="@(Model.Cuisine == cuisine ? "selected" : null)">@cuisine</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DesiredDish" class="form-label"></label>
+                    <input asp-for="DesiredDish" class="form-control" placeholder="np. Lasagne, obiad na 4 osoby" />
+                    <span asp-validation-for="DesiredDish" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-row">
+                    <label asp-for="AdditionalNotes" class="form-label"></label>
+                    <textarea asp-for="AdditionalNotes" class="form-control" rows="3" placeholder="alergie, preferencje, lista goœci..."></textarea>
+                    <span asp-validation-for="AdditionalNotes" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-actions mt-3">
+                <button type="submit" name="submitAction" value="generate" class="btn btn-primary">Wygeneruj listê</button>
+                @if (Model.HasGeneratedList)
+                {
+                    <button type="submit" name="submitAction" value="save" class="btn btn-secondary ms-2">Zapisz listê</button>
+                }
+                <a asp-action="ShoppingLists" class="btn btn-link ms-2">Wróæ</a>
+            </div>
+
+            @if (Model.HasGeneratedList)
+            {
+                <div class="generated-list-card mt-4">
+                    <div class="generated-list-header">
+                        <div>
+                            <h4 class="mb-1">Proponowana lista</h4>
+                            <p class="text-muted mb-0">Mo¿esz zmieniaæ nazwy, iloœci lub dodawaæ w³asne pozycje.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="addItemRow">
+                            <i class="bi bi-plus-lg"></i> Dodaj pozycjê
+                        </button>
+                    </div>
+
+                    <div id="itemsContainer" class="items-list">
+                        @for (int i = 0; i < Model.Items.Count; i++)
+                        {
+                            <div class="item-row">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-5">
+                                        <label class="form-label small">Produkt</label>
+                                        <input class="form-control" data-field="Name" name="Items[@i].Name" value="@Model.Items[i].Name" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Iloœæ</label>
+                                        <input class="form-control" data-field="Quantity" name="Items[@i].Quantity" value="@Model.Items[i].Quantity" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Kategoria</label>
+                                        <input class="form-control" data-field="Category" name="Items[@i].Category" value="@Model.Items[i].Category" />
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <label class="form-label small d-block">&nbsp;</label>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Usuñ pozycjê">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const itemsContainer = document.getElementById('itemsContainer');
+        const addRowBtn = document.getElementById('addItemRow');
+
+        function rebuildIndexes() {
+            if (!itemsContainer) return;
+            itemsContainer.querySelectorAll('.item-row').forEach((row, index) => {
+                row.querySelectorAll('[data-field]').forEach(input => {
+                    const field = input.getAttribute('data-field');
+                    input.name = `Items[${index}].${field}`;
+                });
+            });
+        }
+
+        if (itemsContainer) {
+            itemsContainer.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.remove-row');
+                if (removeBtn) {
+                    const row = removeBtn.closest('.item-row');
+                    row?.remove();
+                    rebuildIndexes();
+                }
+            });
+        }
+
+        if (addRowBtn && itemsContainer) {
+            addRowBtn.addEventListener('click', () => {
+                const newRow = document.createElement('div');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-5">
+                            <label class="form-label small">Produkt</label>
+                            <input class="form-control" data-field="Name" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Iloœæ</label>
+                            <input class="form-control" data-field="Quantity" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Kategoria</label>
+                            <input class="form-control" data-field="Category" />
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <label class="form-label small d-block">&nbsp;</label>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Usuñ pozycjê">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>`;
+
+                itemsContainer.appendChild(newRow);
+                rebuildIndexes();
+            });
+        }
+
+        rebuildIndexes();
+    </script>
+}

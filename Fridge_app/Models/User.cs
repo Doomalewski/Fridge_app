@@ -22,12 +22,14 @@ namespace Fridge_app.Models
         public ICollection<StoredProduct> Fridge { get; set; }
         public List<CookingTool> CookingTools { get; set; }
         public ICollection<NutritionTarget> NutritionTargets { get; set; }
+        public ICollection<ShoppingList> ShoppingLists { get; set; }
 
         public User()
         {
             Fridge = new HashSet<StoredProduct>();
             CookingTools = new List<CookingTool>();
             NutritionTargets = new HashSet<NutritionTarget>();
+            ShoppingLists = new HashSet<ShoppingList>();
         }
     }
 

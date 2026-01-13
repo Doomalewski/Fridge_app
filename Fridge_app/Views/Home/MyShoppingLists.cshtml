@@ -1,0 +1,118 @@
+@model IEnumerable<Fridge_app.Models.ViewModels.ShoppingListSummaryViewModel>
+@using System.Linq
+@using System.Globalization
+@{
+    var pl = CultureInfo.GetCultureInfo("pl-PL");
+    ViewData["Title"] = "Twoje listy zakupowe";
+}
+<link rel="stylesheet" href="~/css/home.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-collection"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">Twoje listy zakupowe</h1>
+                <p class="welcome-subtitle">Bud¿et, pozycje i szacowane koszty</p>
+            </div>
+        </div>
+        <div>
+            <a asp-controller="Home" asp-action="CreateShoppingList" class="btn btn-primary me-2">Nowa lista</a>
+            <a asp-controller="Home" asp-action="ShoppingLists" class="btn btn-link">? Powrót</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-archive"></i></div>
+            <h3>Brak zapisanych list</h3>
+            <p>Wygeneruj now¹ listê zakupów i zapisz j¹, aby móc do niej wróciæ.</p>
+            <a asp-controller="Home" asp-action="CreateShoppingList" class="btn btn-primary btn-lg">Utwórz listê</a>
+        </div>
+    }
+    else
+    {
+        <div class="dashboard-grid">
+            @foreach (var list in Model)
+            {
+                <div class="dashboard-card animate" style="height:auto; text-align:left;">
+                    <div class="card-icon bg-secondary-light" style="margin-left:0;">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="mb-1">@list.Name</h3>
+                        <p class="text-muted mb-2">Dodano: @list.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+                        <div class="mb-2">
+                            @if (list.IsCompleted)
+                            {
+                                <span class="badge bg-success">Zrealizowana @list.CompletedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">W trakcie</span>
+                            }
+                        </div>
+                        <div class="mb-2"><strong>Pozycji:</strong> @list.ItemsCount</div>
+                        <div class="mb-2"><strong>Bud¿et:</strong> @(list.Budget.HasValue ? list.Budget.Value.ToString("C", pl) : "brak")</div>
+                        <div class="mb-2"><strong>Szac. koszt (AI):</strong>
+                            @if (list.EstimatedMin == 0 && list.EstimatedMax == 0)
+                            {
+                                <span class="text-muted">brak danych</span>
+                            }
+                            else if (list.EstimatedMin == list.EstimatedMax)
+                            {
+                                @list.EstimatedMin.ToString("C", pl)
+                            }
+                            else
+                            {
+                                @($"{list.EstimatedMin.ToString("C", pl)} - {list.EstimatedMax.ToString("C", pl)}")
+                            }
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(list.Cuisine))
+                        {
+                            <div class="mb-1"><strong>Kuchnia:</strong> @list.Cuisine</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(list.DesiredDish))
+                        {
+                            <div class="mb-1"><strong>Plan:</strong> @list.DesiredDish</div>
+                        }
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <a asp-action="ShoppingListDetails" asp-route-id="@list.Id" class="card-link">Poka¿</a>
+                        @if (!list.IsCompleted)
+                        {
+                            <form asp-action="CompleteShoppingList" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@list.Id" />
+                                <button type="submit" class="btn btn-sm btn-success">Oznacz jako zrealizowan¹</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => card.classList.add('visible'), index * 150);
+            });
+        });
+    </script>
+}
