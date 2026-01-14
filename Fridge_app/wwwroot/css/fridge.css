@@ -18,6 +18,90 @@ body {
     justify-content: center;
 }
 
+.alphabet-filter {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #d1d1d1;
+    border-radius: 1rem;
+    padding: 0.8rem 1rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.alphabet-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    justify-content: center;
+}
+
+.alphabet-letter {
+    border: 1px solid #d1d1d1;
+    background: #f8f9fa;
+    color: #333;
+    border-radius: 0.6rem;
+    padding: 0.35rem 0.65rem;
+    min-width: 36px;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.alphabet-letter:hover {
+    background: #e9ecef;
+}
+
+.alphabet-letter.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.alphabet-letter.disabled,
+.alphabet-letter:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    color: #888;
+    pointer-events: none;
+}
+
+/* === Układ lodówki z panelami === */
+.fridge-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.filters-panel {
+    width: 280px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #d1d1d1;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: calc(var(--navbar-height, 64px) + 1rem);
+    z-index: 2;
+}
+
+.filter-title {
+    font-weight: 700;
+    color: #111;
+}
+
+.filter-body .form-check {
+    margin-bottom: 0.6rem;
+}
+
+.filters-panel .form-check-input {
+    cursor: pointer;
+}
+
+.filters-panel .form-check-label {
+    cursor: pointer;
+}
+
 /* === Wrapper lodówki === */
 .home-wrapper {
     position: relative;
@@ -35,6 +119,7 @@ body {
     color: #222;
     z-index: 1;
     overflow: hidden;
+    flex: 1;
 }
 
     /* Overlay dla lepszej czytelności produktów */
@@ -401,7 +486,7 @@ border-color: #007bff;
         padding: 1.5rem;
     }
 
-  .form-check {
+    .form-check {
         margin-bottom: 0.6rem;
     }
 
@@ -412,5 +497,16 @@ border-color: #007bff;
     .modal-body .form-check:has(input[name="Language"]) {
         display: block;
         margin-right: 0;
+    }
+}
+
+@media (max-width: 992px) {
+    .fridge-layout {
+        flex-direction: column;
+    }
+
+    .filters-panel {
+        width: 100%;
+        position: static;
     }
 }

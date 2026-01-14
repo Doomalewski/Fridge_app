@@ -37,6 +37,38 @@
     border: 1px solid #d1d1d1;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-actions .back-link {
+    margin-left: auto;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.4rem;
+    background-color: #6c757d;
+    color: #fff;
+    border-radius: 0.8rem;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+
+.back-link:hover,
+.back-link:focus {
+    background-color: #5a6268;
+    color: #fff;
+    border-color: #545b62;
+    transform: translateY(-1px);
+}
+
 .welcome-box {
     display: flex;
     align-items: center;

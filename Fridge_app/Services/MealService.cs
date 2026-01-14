@@ -56,21 +56,16 @@ namespace Fridge_app.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                await _recipeRepository.AddAsync(recipe);
-                await _context.SaveChangesAsync(); // Ustawia recipe.Id
-
-                foreach (var product in products)
+                // Ensure ingredients are attached only once to avoid duplicate inserts
+                if (products?.Any() == true)
                 {
-                    product.Id = 0; // Ustawienie Id na 0, aby baza wygenerowała nowy klucz
-                    product.RecipeId = recipe.Id;
-                    await _productAmountRepository.AddAsync(product);
+                    recipe.Ingridients = products;
                 }
 
-                await _context.SaveChangesAsync(); // Zapisuje produkty
+                await _recipeRepository.AddAsync(recipe); // Saves recipe with its ingredients
 
                 meal.RecipeId = recipe.Id;
                 await _mealRepository.AddAsync(meal);
-                await _context.SaveChangesAsync(); // Zapisuje posiłek
 
                 await transaction.CommitAsync();
             }

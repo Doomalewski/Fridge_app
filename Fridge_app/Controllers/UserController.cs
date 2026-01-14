@@ -235,6 +235,7 @@ public class UserController : Controller
         {
 // Pobierz dane użytkownika, którego przepisy chcemy zobaczyć
     var user = await _context.Users
+        .Include(u => u.HumanStats)
         .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
@@ -258,11 +259,92 @@ public class UserController : Controller
      .ToListAsync();
 
 ViewData["UserEmail"] = user.Email;
+ViewData["UserDiet"] = user.HumanStats?.Diet ?? "Brak danych";
      return View("ViewUserMeals", meals);
         }
         catch (Exception ex)
    {
             TempData["Error"] = $"Błąd wczytywania przepisów: {ex.Message}";
+            return RedirectToAction("Index");
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveMealFromUser(int id)
+    {
+        try
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                TempData["Error"] = "Zaloguj się, aby zapisać przepisy.";
+                return RedirectToAction("Login");
+            }
+
+            var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var sourceMeal = await _context.Meals
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Ingridients)
+                        .ThenInclude(i => i.Product)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.Steps)
+                .Include(m => m.Recipe)
+                    .ThenInclude(r => r.CookingTools)
+                .Include(m => m.Tags)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (sourceMeal == null)
+            {
+                TempData["Error"] = "Przepis nie został znaleziony.";
+                return RedirectToAction("Index");
+            }
+
+            var sourceUserId = sourceMeal.UserId;
+
+            if (sourceUserId == currentUserId)
+            {
+                TempData["Info"] = "Ten przepis jest już w Twojej kolekcji.";
+                return RedirectToAction("ViewUserMeals", new { userId = sourceUserId });
+            }
+
+            var newRecipe = new Recipe
+            {
+                Name = sourceMeal.Recipe?.Name ?? "Bez nazwy",
+                Difficulty = sourceMeal.Recipe?.Difficulty ?? "Nieokreślony",
+                CreatedAt = DateTime.UtcNow,
+                Ingridients = sourceMeal.Recipe?.Ingridients?
+                    .Select(i => new ProductWithAmount
+                    {
+                        ProductId = i.ProductId,
+                        Amount = i.Amount
+                    }).ToList() ?? new List<ProductWithAmount>(),
+                Steps = sourceMeal.Recipe?.Steps?
+                    .Select(s => new RecipeStep
+                    {
+                        StepNumber = s.StepNumber,
+                        Instruction = s.Instruction,
+                        StepTime = s.StepTime
+                    }).ToList() ?? new List<RecipeStep>(),
+                CookingTools = sourceMeal.Recipe?.CookingTools?.ToList() ?? new List<CookingTool>()
+            };
+
+            var newMeal = new Meal
+            {
+                Description = sourceMeal.Description,
+                Category = sourceMeal.Category,
+                UserId = currentUserId,
+                Tags = sourceMeal.Tags?.ToList() ?? new List<Tag>()
+            };
+
+            await _mealService.CreateMealAsync(newMeal, newRecipe, newRecipe.Ingridients);
+
+            TempData["Success"] = "Przepis zapisano w Twojej kolekcji.";
+            return RedirectToAction("ViewUserMeals", new { userId = sourceUserId });
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Nie udało się zapisać przepisu: {ex.Message}";
             return RedirectToAction("Index");
         }
     }

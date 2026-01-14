@@ -15,8 +15,13 @@
             </div>
             <div>
                 <h1 class="welcome-title">Ustawienia konta</h1>
-                <p class="welcome-subtitle">Zarz¹dzaj swoim kontem i preferencjami ??</p>
+                <p class="welcome-subtitle">Zarz¹dzaj swoim kontem i preferencjami</p>
             </div>
+        </div>
+        <div class="header-actions">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
         </div>
     </div>
 
@@ -153,9 +158,9 @@
                         <label for="NutritionGoal" class="form-label">Cel ¿ywieniowy *</label>
                         <select class="form-select" id="NutritionGoal" name="NutritionGoal" asp-for="NutritionGoal" required>
                             <option value="">-- Wybierz cel --</option>
-                            <option value="1">?? Redukcja wagi (Cut)</option>
-                            <option value="0">?? Utrzymanie wagi (Maintain)</option>
-                            <option value="2">?? Budowa miêœni (Bulk)</option>
+                            <option value="1">Redukcja wagi (Cut)</option>
+                            <option value="0">Utrzymanie wagi (Maintain)</option>
+                            <option value="2">Budowa miêœni (Bulk)</option>
                         </select>
                         <span asp-validation-for="NutritionGoal" class="text-danger"></span>
                     </div>
@@ -165,11 +170,11 @@
                         <label for="ActivityLevel" class="form-label">Poziom aktywnoœci *</label>
                         <select class="form-select" id="ActivityLevel" name="ActivityLevel" asp-for="ActivityLevel" required>
                             <option value="">-- Wybierz poziom --</option>
-                            <option value="0">??? Siedz¹cy (brak æwiczeñ)</option>
-                            <option value="1">?? Lekko aktywny (1-3 dni/tydzieñ)</option>
-                            <option value="2">?? Umiarkowanie aktywny (3-5 dni/tydzieñ)</option>
-                            <option value="3">??? Bardzo aktywny (6-7 dni/tydzieñ)</option>
-                            <option value="4">?? Ekstremalnie aktywny (2x dziennie)</option>
+                            <option value="0">Siedz¹cy (brak æwiczeñ)</option>
+                            <option value="1">Lekko aktywny (1-3 dni/tydzieñ)</option>
+                            <option value="2">Umiarkowanie aktywny (3-5 dni/tydzieñ)</option>
+                            <option value="3">Bardzo aktywny (6-7 dni/tydzieñ)</option>
+                            <option value="4">Ekstremalnie aktywny (2x dziennie)</option>
                         </select>
                         <span asp-validation-for="ActivityLevel" class="text-danger"></span>
                     </div>
@@ -188,39 +193,29 @@
                     @if (Model.CalculatedCalories.HasValue)
                     {
                         <div class="alert alert-success mt-4" id="calculationResults">
-                            <h5><strong>?? Obliczone cele ¿ywieniowe:</strong></h5>
-                            <div class="row mt-3">
-                                <div class="col-6 col-md-4 text-center mb-3">
-                                    <div class="nutrition-stat">
-                                        <div class="stat-value">@Model.BMR?.ToString("F0")</div>
-                                        <div class="stat-label">BMR (kcal)</div>
-                                    </div>
+                            <h5><strong>Obliczone cele ¿ywieniowe:</strong></h5>
+
+                            <div class="text-center mt-3">
+                                <div class="nutrition-stat d-inline-block">
+                                    <div class="stat-value text-primary">@Model.CalculatedCalories</div>
+                                    <div class="stat-label">Kalorie/dzieñ</div>
                                 </div>
-                                <div class="col-6 col-md-4 text-center mb-3">
-                                    <div class="nutrition-stat">
-                                        <div class="stat-value">@Model.TDEE?.ToString("F0")</div>
-                                        <div class="stat-label">TDEE (kcal)</div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-4 text-center mb-3">
-                                    <div class="nutrition-stat">
-                                        <div class="stat-value text-primary">@Model.CalculatedCalories</div>
-                                        <div class="stat-label">Kalorie/dzieñ</div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-4 text-center mb-3">
+                            </div>
+
+                            <div class="row justify-content-center mt-3">
+                                <div class="col-12 col-md-4 text-center mb-3">
                                     <div class="nutrition-stat">
                                         <div class="stat-value">@Model.CalculatedProtein?.ToString("F0")g</div>
                                         <div class="stat-label">Bia³ko</div>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-4 text-center mb-3">
+                                <div class="col-12 col-md-4 text-center mb-3">
                                     <div class="nutrition-stat">
                                         <div class="stat-value">@Model.CalculatedFat?.ToString("F0")g</div>
                                         <div class="stat-label">T³uszcze</div>
                                     </div>
                                 </div>
-                                <div class="col-6 col-md-4 text-center mb-3">
+                                <div class="col-12 col-md-4 text-center mb-3">
                                     <div class="nutrition-stat">
                                         <div class="stat-value">@Model.CalculatedCarbs?.ToString("F0")g</div>
                                         <div class="stat-label">Wêglowodany</div>
@@ -229,7 +224,6 @@
                             </div>
                             <hr />
                             <small class="text-muted">
-                                <strong>Wzory:</strong> BMR (Mifflin-St Jeor) ? TDEE (BMR × aktywnoœæ) ? Kalorie (TDEE ± cel)<br />
                                 Makrosk³adniki dostosowane do celu: bia³ko 4kcal/g, t³uszcze 9kcal/g, wêglowodany 4kcal/g
                             </small>
                         </div>

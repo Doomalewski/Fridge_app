@@ -21,7 +21,11 @@
                 }
             </div>
         </div>
-        <a asp-action="ShoppingLists" class="btn btn-link">? Wróæ</a>
+        <div class="header-actions">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
+        </div>
     </div>
 
     @if (TempData["Success"] != null)

@@ -1,10 +1,18 @@
 ﻿@model Fridge_app.Models.User
+@using System.Linq
+@using System.Globalization
 
 @{
     ViewData["Title"] = "Twoja lodówka";
+    var alphabet = Enumerable.Range(0, 26).Select(i => ((char)('A' + i)).ToString());
+    var productLetters = Model.Fridge
+        .Where(p => !string.IsNullOrWhiteSpace(p.Product?.Name))
+        .Select(p => p.Product.Name.Trim()[0].ToString().ToUpper(CultureInfo.InvariantCulture))
+        .Distinct()
+        .ToHashSet();
 }
 <link rel="stylesheet" href="~/css/fridge.css" />
-<div class="home-header mb-4 d-flex justify-content-between align-items-center">
+<div class="home-header mb-4 d-flex justify-content-between align-items-center header-actions">
     <div class="welcome-box">
         <i class="welcome-icon bi bi-box-seam"></i>
         <div>
@@ -12,63 +20,124 @@
             <p class="welcome-subtitle">Dodawaj i zarządzaj produktami do woli.</p>
         </div>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productSearchModal">
-        <i class="bi bi-plus-circle"></i> Dodaj produkt
-    </button>
-</div>
-<div class="home-wrapper">
-    <div class="dashboard-grid">
-        @foreach (var item in Model.Fridge)
-{
-    // Oblicz klasę koloru kropki na podstawie daty ważności
-    var daysLeft = (item.ExpirationDate - DateTime.Now).TotalDays;
-    var freshnessClass = daysLeft switch
-    {
-        > 5 => "fresh",       // zielony
-        > 2 => "warning",     // żółty
-        > 0 => "soon",        // pomarańczowy
-        _ => "expired"        // czerwony
-    };
-
-    <div class="dashboard-card visible">
-        <div class="card-content">
-                    <div class="product-header">
-                        <h3 class="product-name">@item.Product.Name</h3>
-                        <span class="freshness-dot @freshnessClass"
-                              title="Ważny do: @(item.ExpirationDate != null ? item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy") : "Brak daty ważności")">
-                        </span>
-                    </div>
-
-            <p>Ilość: <strong>@item.Quantity @item.Product.Unit</strong></p>
-            <p>Ważny do: <strong>@item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
-        </div>
-        <div class="mt-auto d-flex justify-content-between pt-3">
-            <button class="btn btn-outline-dark btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModal"
-                    data-id="@item.Id"
-                    data-quantity="@item.Quantity"
-                    data-unit="@item.Product.Unit">
-                Edytuj
-            </button>
-            <button class="btn btn-danger btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteModal"
-                    data-id="@item.Id"
-                    data-name="@item.Product.Name">
-                Usuń
-            </button>
-        </div>
-    </div>
-}
-
-    </div>
-
-    <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center" id="generateMealForm">
-        <button type="button" class="btn btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;" data-bs-toggle="modal" data-bs-target="#generateMealModal">
-       <i class="fas fa-magic"></i> Wygeneruj przepis
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productSearchModal">
+            <i class="bi bi-plus-circle"></i> Dodaj produkt
         </button>
-    </form>
+        <a href="javascript:history.back()" class="back-link">
+            <i class="bi bi-arrow-left"></i> Powrót
+        </a>
+    </div>
+</div>
+
+<div class="alphabet-filter mb-3">
+    <div class="alphabet-row">
+        <button type="button" class="alphabet-letter active" data-letter="">Wszystkie</button>
+        @foreach (var letter in alphabet)
+        {
+            var hasProducts = productLetters.Contains(letter);
+            <button type="button"
+                    class="alphabet-letter @(hasProducts ? string.Empty : "disabled")"
+                    data-letter="@letter"
+                    @(hasProducts ? null : "disabled")>
+                @letter
+            </button>
+        }
+    </div>
+</div>
+
+<div class="fridge-layout">
+    <aside class="filters-panel">
+        <div class="filter-header d-flex align-items-center gap-2">
+            <i class="bi bi-funnel"></i>
+            <div>
+                <div class="filter-title">Filtry ważności</div>
+                <small class="text-muted">Zawęż widok po dacie</small>
+            </div>
+        </div>
+        <div class="filter-body mt-3">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="expiryFilter" id="filterAll" value="all" checked>
+                <label class="form-check-label" for="filterAll">Wszystkie produkty</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="expiryFilter" id="filterExpired" value="expired">
+                <label class="form-check-label" for="filterExpired">Przeterminowane</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="expiryFilter" id="filter3Days" value="3days">
+                <label class="form-check-label" for="filter3Days">Kończy się &le; 3 dni</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="expiryFilter" id="filter7Days" value="7days">
+                <label class="form-check-label" for="filter7Days">Kończy się &le; 7 dni</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="expiryFilter" id="filterFresh" value="fresh">
+                <label class="form-check-label" for="filterFresh">Świeże (> 7 dni)</label>
+            </div>
+        </div>
+    </aside>
+
+    <div class="home-wrapper flex-grow-1">
+        <div class="dashboard-grid">
+            @foreach (var item in Model.Fridge.OrderBy(p => p.Product.Name))
+            {
+                // Oblicz klasę koloru kropki na podstawie daty ważności
+                var daysLeft = (item.ExpirationDate - DateTime.Now).TotalDays;
+                var freshnessClass = daysLeft switch
+                {
+                    > 5 => "fresh",       // zielony
+                    > 2 => "warning",     // żółty
+                    > 0 => "soon",        // pomarańczowy
+                    _ => "expired"        // czerwony
+                };
+                var letter = string.Empty;
+                if (!string.IsNullOrWhiteSpace(item.Product?.Name))
+                {
+                    var trimmed = item.Product.Name.Trim();
+                    letter = char.ToUpperInvariant(trimmed[0]).ToString();
+                }
+
+                <div class="dashboard-card visible" data-days-left="@daysLeft.ToString("F2", CultureInfo.InvariantCulture)" data-freshness="@freshnessClass" data-letter="@letter">
+                    <div class="card-content">
+                        <div class="product-header">
+                            <h3 class="product-name">@item.Product.Name</h3>
+                            <span class="freshness-dot @freshnessClass"
+                                  title="Ważny do: @(item.ExpirationDate != null ? item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy") : "Brak daty ważności")">
+                            </span>
+                        </div>
+
+                        <p>Ilość: <strong>@item.Quantity @item.Product.Unit</strong></p>
+                        <p>Ważny do: <strong>@item.ExpirationDate.ToLocalTime().ToString("dd/MM/yyyy")</strong></p>
+                    </div>
+                    <div class="mt-auto d-flex justify-content-between pt-3">
+                        <button class="btn btn-outline-dark btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal"
+                                data-id="@item.Id"
+                                data-quantity="@item.Quantity"
+                                data-unit="@item.Product.Unit">
+                            Edytuj
+                        </button>
+                        <button class="btn btn-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                data-id="@item.Id"
+                                data-name="@item.Product.Name">
+                            Usuń
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <form asp-controller="User" asp-action="GenerateMeal" method="post" class="mt-4 text-center" id="generateMealForm">
+            <button type="button" class="btn btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;" data-bs-toggle="modal" data-bs-target="#generateMealModal">
+                <i class="fas fa-magic"></i> Wygeneruj przepis
+            </button>
+        </form>
+    </div>
 </div>
 
 <!-- Modal edycji -->
@@ -259,6 +328,60 @@
             const modal = $(this);
             modal.find('#deleteProductId').val(button.data('id'));
             modal.find('#productNameDisplay').text(button.data('name'));
+        });
+
+        let selectedLetter = '';
+
+        function applyFilters() {
+            const selectedExpiry = document.querySelector('input[name="expiryFilter"]:checked')?.value || 'all';
+            document.querySelectorAll('.dashboard-card').forEach(card => {
+                const daysLeft = parseFloat(card.dataset.daysLeft);
+                const freshness = card.dataset.freshness;
+                const letter = card.dataset.letter || '';
+                let isVisible = true;
+
+                switch (selectedExpiry) {
+                    case 'expired':
+                        isVisible = freshness === 'expired' || daysLeft < 0;
+                        break;
+                    case '3days':
+                        isVisible = daysLeft <= 3 && daysLeft >= 0;
+                        break;
+                    case '7days':
+                        isVisible = daysLeft <= 7 && daysLeft >= 0;
+                        break;
+                    case 'fresh':
+                        isVisible = daysLeft > 7;
+                        break;
+                    default:
+                        isVisible = true;
+                        break;
+                }
+
+                if (selectedLetter && letter !== selectedLetter) {
+                    isVisible = false;
+                }
+
+                card.style.display = isVisible ? '' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input[name="expiryFilter"]').forEach(radio => {
+                radio.addEventListener('change', applyFilters);
+            });
+
+            document.querySelectorAll('.alphabet-letter').forEach(button => {
+                if (button.disabled) return;
+                button.addEventListener('click', () => {
+                    selectedLetter = button.dataset.letter || '';
+                    document.querySelectorAll('.alphabet-letter').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    applyFilters();
+                });
+            });
+
+            applyFilters();
         });
 
         // Obsługa powiadomień

@@ -1,11 +1,135 @@
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
 @model IEnumerable<Fridge_app.Models.Meal>
 
 @{
     ViewData["Title"] = "Moje przepisy";
+    var orderedMeals = Model?
+        .OrderBy(m => m.Recipe?.Name ?? string.Empty)
+        .ToList();
+    var alphabet = Enumerable.Range(0, 26).Select(i => ((char)('A' + i)).ToString());
+    var mealLetters = orderedMeals?
+        .Select(m => m.Recipe?.Name?.Trim())
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Select(name => char.ToUpperInvariant(name![0]).ToString(CultureInfo.InvariantCulture))
+        .Distinct()
+        .ToHashSet()
+        ?? new HashSet<string>();
+    var categories = orderedMeals?
+        .Select(m => m.Category)
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Distinct(StringComparer.CurrentCultureIgnoreCase)
+        .OrderBy(c => c)
+        .ToList() ?? new List<string>();
+    var difficulties = orderedMeals?
+        .Select(m => m.Recipe?.Difficulty)
+        .Where(d => !string.IsNullOrWhiteSpace(d))
+        .Distinct(StringComparer.CurrentCultureIgnoreCase)
+        .OrderBy(d => d)
+        .ToList() ?? new List<string>();
 }
 
 <link rel="stylesheet" href="~/css/home.css" />
 <link rel="stylesheet" href="~/css/mykitchen-mymeals.css" />
+<style>
+    /* Styl paska liter jak w lodówce, bez wp³ywu na resztê widoku */
+    .alphabet-filter {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #d1d1d1;
+        border-radius: 0.9rem;
+        padding: 0.6rem 0.75rem;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .alphabet-row {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.3rem;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .alphabet-letter {
+        border: 1px solid #d1d1d1;
+        background: #f8f9fa;
+        color: #333;
+        border-radius: 0.55rem;
+        padding: 0.28rem 0.6rem;
+        min-width: 34px;
+        flex: 0 0 auto;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        line-height: 1;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .alphabet-letter:hover {
+        background: #e9ecef;
+    }
+
+    .alphabet-letter.active {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .alphabet-letter.disabled,
+    .alphabet-letter:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #f5f5f5;
+        color: #888;
+        pointer-events: none;
+    }
+
+    .meals-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1rem;
+        align-items: start;
+    }
+
+    @@media (max-width: 992px) {
+        .meals-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-panel {
+            position: static;
+            max-height: none;
+        }
+    }
+
+    .filters-panel {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.9rem;
+        padding: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        position: sticky;
+        top: calc(var(--navbar-height, 64px) + 1rem);
+        width: 100%;
+        max-height: calc(100vh - 96px);
+        overflow-y: auto;
+        z-index: 2;
+    }
+
+    .filter-header .filter-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .filter-body .form-check {
+        margin-bottom: 0.35rem;
+    }
+</style>
 
 <div class="home-wrapper">
     <div class="home-header">
@@ -15,17 +139,115 @@
   </div>
   <div>
     <h1 class="welcome-title">Moje przepisy</h1>
-       <p class="welcome-subtitle">Przejrzyj i zarz¹dzaj swoimi zapisanymi przepisami ??</p>
+       <p class="welcome-subtitle">Przejrzyj i zarz¹dzaj swoimi zapisanymi przepisami</p>
         </div>
+        </div>
+        <div class="header-actions">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
         </div>
     </div>
 
-    @if (Model?.Any() == true)
+    @if (orderedMeals?.Any() == true)
     {
- <div class="dashboard-grid meals-grid">
-      @foreach (var meal in Model)
-   {
- <div class="dashboard-card dashboard-card-meal animate">
+ <div class="alphabet-filter mb-3">
+     <div class="alphabet-row">
+        <button type="button" class="alphabet-letter active" data-letter="">Wszystkie</button>
+        @foreach (var letter in alphabet)
+        {
+            var hasMeals = mealLetters.Contains(letter);
+            <button type="button"
+                    class="alphabet-letter @(hasMeals ? string.Empty : "disabled")"
+                    data-letter="@letter"
+                    @(hasMeals ? null : "disabled")>
+                @letter
+            </button>
+        }
+     </div>
+ </div>
+
+ <div class="meals-layout">
+     <aside class="filters-panel">
+         <div class="filter-header d-flex align-items-center gap-2">
+             <i class="bi bi-funnel"></i>
+             <div>
+                 <div class="filter-title">Filtry przepisów</div>
+                 <small class="text-muted">Zawê¿ widok jak w lodówce</small>
+             </div>
+         </div>
+         <div class="filter-body mt-3">
+             <div class="mb-3">
+                 <div class="fw-semibold mb-1">Rodzaj dania</div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="categoryFilter" id="catAll" value="" checked>
+                     <label class="form-check-label" for="catAll">Wszystkie</label>
+                 </div>
+                 @for (var i = 0; i < categories.Count; i++)
+                 {
+                     var c = categories[i];
+                     var id = $"cat{i}";
+                     <div class="form-check">
+                         <input class="form-check-input" type="radio" name="categoryFilter" id="@id" value="@c">
+                         <label class="form-check-label" for="@id">@c</label>
+                     </div>
+                 }
+             </div>
+
+             <div class="mb-3">
+                 <div class="fw-semibold mb-1">Poziom trudnoœci</div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="difficultyFilter" id="diffAll" value="" checked>
+                     <label class="form-check-label" for="diffAll">Dowolny</label>
+                 </div>
+                 @for (var i = 0; i < difficulties.Count; i++)
+                 {
+                     var d = difficulties[i];
+                     var id = $"diff{i}";
+                     <div class="form-check">
+                         <input class="form-check-input" type="radio" name="difficultyFilter" id="@id" value="@d">
+                         <label class="form-check-label" for="@id">@d</label>
+                     </div>
+                 }
+             </div>
+
+             <div class="mb-1">
+                 <div class="fw-semibold mb-1">Czas przygotowania</div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="timeFilter" id="timeAll" value="" checked>
+                     <label class="form-check-label" for="timeAll">Dowolny</label>
+                 </div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="timeFilter" id="time15" value="15">
+                     <label class="form-check-label" for="time15">Do 15 min</label>
+                 </div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="timeFilter" id="time30" value="30">
+                     <label class="form-check-label" for="time30">Do 30 min</label>
+                 </div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="timeFilter" id="time45" value="45">
+                     <label class="form-check-label" for="time45">Do 45 min</label>
+                 </div>
+                 <div class="form-check">
+                     <input class="form-check-input" type="radio" name="timeFilter" id="time45plus" value="45+">
+                     <label class="form-check-label" for="time45plus">Ponad 45 min</label>
+                 </div>
+             </div>
+         </div>
+     </aside>
+
+     <div class="dashboard-grid meals-grid">
+          @foreach (var meal in orderedMeals)
+       {
+           var letter = string.Empty;
+           var recipeName = meal.Recipe?.Name?.Trim();
+           if (!string.IsNullOrWhiteSpace(recipeName))
+           {
+               letter = char.ToUpperInvariant(recipeName![0]).ToString(CultureInfo.InvariantCulture);
+           }
+           var totalTime = meal.Recipe?.Steps?.Sum(s => s.StepTime ?? 0) ?? 0;
+ <div class="dashboard-card dashboard-card-meal animate" data-letter="@letter" data-category="@meal.Category" data-difficulty="@meal.Recipe?.Difficulty" data-time="@totalTime">
       <div class="card-icon bg-info-light">
           <i class="bi bi-bookmark"></i>
 </div>
@@ -55,7 +277,8 @@
            <div class="meal-meta mt-3">
  <div class="meta-item">
  <i class="bi bi-basket"></i>
-<small>@meal.Recipe.Ingridients?.Count sk³adnik(ów)</small>
+
+<small>@meal.Recipe.Ingridients?.DistinctBy(i => i.ProductId).Count() sk³adnik(ów)</small>
       </div>
   <div class="meta-item">
 <i class="bi bi-clock"></i>
@@ -79,6 +302,7 @@
       </div>
   </div>
        }
+     </div>
  </div>
   }
  else
@@ -107,6 +331,69 @@
     card.classList.add('visible');
   }, index * 150);
       });
+
+            let selectedLetter = '';
+            const letterButtons = document.querySelectorAll('.alphabet-letter');
+
+            const getSelected = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+
+            const applyMealFilters = () => {
+                const selectedCategory = getSelected('categoryFilter');
+                const selectedDifficulty = getSelected('difficultyFilter');
+                const selectedTime = getSelected('timeFilter');
+
+                cards.forEach(card => {
+                    const letter = card.dataset.letter || '';
+                    const category = card.dataset.category || '';
+                    const difficulty = card.dataset.difficulty || '';
+                    const totalTime = parseInt(card.dataset.time || '0', 10);
+
+                    let isVisible = (!selectedLetter || letter === selectedLetter);
+
+                    if (isVisible && selectedCategory) {
+                        isVisible = category.toLowerCase() === selectedCategory.toLowerCase();
+                    }
+
+                    if (isVisible && selectedDifficulty) {
+                        isVisible = difficulty.toLowerCase() === selectedDifficulty.toLowerCase();
+                    }
+
+                    if (isVisible && selectedTime) {
+                        switch (selectedTime) {
+                            case '15':
+                                isVisible = totalTime <= 15;
+                                break;
+                            case '30':
+                                isVisible = totalTime <= 30;
+                                break;
+                            case '45':
+                                isVisible = totalTime <= 45;
+                                break;
+                            case '45+':
+                                isVisible = totalTime > 45;
+                                break;
+                        }
+                    }
+
+                    card.style.display = isVisible ? '' : 'none';
+                });
+            };
+
+            letterButtons.forEach(button => {
+                if (button.disabled) return;
+                button.addEventListener('click', () => {
+                    selectedLetter = button.dataset.letter || '';
+                    letterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    applyMealFilters();
+                });
+            });
+
+            document.querySelectorAll('input[name="categoryFilter"], input[name="difficultyFilter"], input[name="timeFilter"]').forEach(radio => {
+                radio.addEventListener('change', applyMealFilters);
+            });
+
+            applyMealFilters();
   });
     </script>
 }

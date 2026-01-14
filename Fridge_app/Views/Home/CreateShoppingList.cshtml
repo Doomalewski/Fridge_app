@@ -16,6 +16,11 @@
                 <p class="welcome-subtitle">Okreœl bud¿et, kuchniê i danie, a Gemini AI zbuduje propozycjê listy</p>
             </div>
         </div>
+        <div class="header-actions">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
+        </div>
     </div>
 
     <div class="shopping-card">
@@ -67,7 +72,6 @@
                 {
                     <button type="submit" name="submitAction" value="save" class="btn btn-secondary ms-2">Zapisz listê</button>
                 }
-                <a asp-action="ShoppingLists" class="btn btn-link ms-2">Wróæ</a>
             </div>
 
             @if (Model.HasGeneratedList)

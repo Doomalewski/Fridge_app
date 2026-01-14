@@ -284,6 +284,33 @@ namespace Fridge_app.Controllers
             return RedirectToAction(nameof(ShoppingListDetails), new { id });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteShoppingList(int id)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "User");
+            }
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var list = await _context.ShoppingLists
+                .Include(sl => sl.Items)
+                .FirstOrDefaultAsync(sl => sl.Id == id && sl.UserId == userId);
+
+            if (list == null)
+            {
+                TempData["Error"] = "Lista nie zosta³a znaleziona.";
+                return RedirectToAction(nameof(MyShoppingLists));
+            }
+
+            _context.ShoppingLists.Remove(list);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Lista zosta³a usuniêta.";
+            return RedirectToAction(nameof(MyShoppingLists));
+        }
+
         private static IEnumerable<string> GetCuisineOptions() => new[]
         {
             "Polska",

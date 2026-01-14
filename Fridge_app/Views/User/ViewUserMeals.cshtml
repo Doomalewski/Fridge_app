@@ -1,6 +1,11 @@
+@using System.Security.Claims
 @model IEnumerable<Fridge_app.Models.Meal>
 @{
     ViewData["Title"] = "Przepisy - " + (ViewData["UserEmail"] ?? "U¿ytkownik");
+    var userDiet = ViewData["UserDiet"] as string ?? "Brak danych";
+    var currentUserId = User.Identity?.IsAuthenticated == true
+        ? int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier))
+        : 0;
 }
 
 <link rel="stylesheet" href="~/css/home.css" />
@@ -9,83 +14,124 @@
 <div class="home-wrapper">
     <div class="home-header">
         <div class="welcome-box">
-       <div class="welcome-icon">
-     <i class="bi bi-book"></i>
-          </div>
- <div>
-   <h1 class="welcome-title">Przepisy u¿ytkownika</h1>
-      <p class="welcome-subtitle">Email: <strong>@ViewData["UserEmail"]</strong></p>
-</div>
-      </div>
- <a asp-action="Index" class="btn btn-secondary">
-     <i class="bi bi-arrow-left"></i> Wróæ
+            <div class="welcome-icon">
+                <i class="bi bi-book"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">Przepisy u¿ytkownika</h1>
+                <p class="welcome-subtitle">Email: <strong>@ViewData["UserEmail"]</strong></p>
+                <p class="text-muted mb-0">Dieta: <strong>@userDiet</strong></p>
+            </div>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Wróæ
         </a>
     </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     @if (Model?.Any() == true)
     {
         <div class="dashboard-grid meals-grid">
-   @foreach (var meal in Model)
-  {
-     <div class="dashboard-card dashboard-card-meal animate">
-  <div class="card-icon bg-info-light">
-      <i class="bi bi-bookmark"></i>
-    </div>
-   <div class="card-content">
-   <h3>@meal.Recipe.Name</h3>
- <p>@meal.Description</p>
+            @foreach (var meal in Model)
+            {
+                var isOwnMeal = meal.UserId == currentUserId;
+                var ingredientCount = meal?.Recipe?.Ingridients?
+                    .Select(i => i.ProductId)
+                    .Distinct()
+                    .Count() ?? 0;
+                <div class="dashboard-card dashboard-card-meal animate">
+                    <div class="card-icon bg-info-light">
+                        <i class="bi bi-bookmark"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>@meal.Recipe.Name</h3>
+                        <p>@meal.Description</p>
 
-     <div class="meal-badges mb-2">
-<span class="badge bg-info">@meal.Category</span>
-         <span class="badge bg-warning text-dark">@meal.Recipe.Difficulty</span>
-         </div>
+                        <div class="meal-badges mb-2">
+                            <span class="badge bg-info">@meal.Category</span>
+                            <span class="badge bg-warning text-dark">@meal.Recipe.Difficulty</span>
+                        </div>
 
-    @if (meal.Tags?.Any() == true)
-        {
-    <div class="meal-tags mb-2">
- @foreach (var tag in meal.Tags.Take(2))
-    {
-  <span class="badge bg-secondary">@tag.Name</span>
-       }
-       @if (meal.Tags.Count > 2)
-    {
-     <span class="badge bg-secondary">+@(meal.Tags.Count - 2)</span>
-      }
-       </div>
-     }
+                        @if (meal.Tags?.Any() == true)
+                        {
+                            <div class="meal-tags mb-2">
+                                @foreach (var tag in meal.Tags.Take(2))
+                                {
+                                    <span class="badge bg-secondary">@tag.Name</span>
+                                }
+                                @if (meal.Tags.Count > 2)
+                                {
+                                    <span class="badge bg-secondary">+@(meal.Tags.Count - 2)</span>
+                                }
+                            </div>
+                        }
 
-<div class="meal-meta mt-3">
-    <div class="meta-item">
-   <i class="bi bi-basket"></i>
-           <small>@meal.Recipe.Ingridients?.Count sk³adnik(ów)</small>
-  </div>
-           <div class="meta-item">
-        <i class="bi bi-clock"></i>
-       <small>@(meal.Recipe.Steps?.Sum(s => s.StepTime ?? 0)) min</small>
-       </div>
-     <div class="meta-item">
-  <i class="bi bi-calendar"></i>
-     <small>@meal.Recipe.CreatedAt.ToShortDateString()</small>
-</div>
-      </div>
-</div>
-            <div style="display: flex; gap: 8px;">
-      <a asp-action="ViewMealDetails" asp-route-id="@meal.Id" class="card-link" style="flex: 1;">
-        <i class="bi bi-eye"></i> Szczegó³y
-         </a>
+                        <div class="meal-meta mt-3">
+                            <div class="meta-item">
+                                <i class="bi bi-basket"></i>
+                                <small>@ingredientCount sk³adnik(ów)</small>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-clock"></i>
+                                <small>@(meal.Recipe.Steps?.Sum(s => s.StepTime ?? 0)) min</small>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-calendar"></i>
+                                <small>@meal.Recipe.CreatedAt.ToShortDateString()</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <a asp-action="ViewMealDetails" asp-route-id="@meal.Id" class="card-link" style="flex: 1;">
+                            <i class="bi bi-eye"></i> Szczegó³y
+                        </a>
+                        @if (!isOwnMeal)
+                        {
+                            <form asp-action="SaveMealFromUser" asp-route-id="@meal.Id" method="post" style="flex: 1; margin: 0;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="card-link" style="width: 100%;">
+                                    <i class="bi bi-bookmark-plus"></i> Zapisz do moich przepisów
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary" style="flex-shrink: 0;">Twój przepis</span>
+                        }
+                    </div>
+                </div>
+            }
         </div>
-       </div>
     }
-  </div>
- }
     else
     {
         <div class="empty-state">
-       <div class="empty-icon">
+            <div class="empty-icon">
                 <i class="bi bi-inbox"></i>
-      </div>
-     <h3>Ten u¿ytkownik nie ma jeszcze ¿adnych przepisów</h3>
-     <p>Wróæ do listy u¿ytkowników i spróbuj z innym u¿ytkownikiem.</p>
+            </div>
+            <h3>Ten u¿ytkownik nie ma jeszcze ¿adnych przepisów</h3>
+            <p>Wróæ do listy u¿ytkowników i spróbuj z innym u¿ytkownikiem.</p>
         </div>
     }
 </div>
@@ -93,12 +139,12 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-    const cards = document.querySelectorAll('.dashboard-card.animate');
-       cards.forEach((card, index) => {
-    setTimeout(() => {
-      card.classList.add('visible');
-     }, index * 150);
-     });
+            const cards = document.querySelectorAll('.dashboard-card.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 150);
+            });
         });
     </script>
 }

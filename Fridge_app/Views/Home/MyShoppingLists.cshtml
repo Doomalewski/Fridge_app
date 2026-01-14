@@ -18,9 +18,11 @@
                 <p class="welcome-subtitle">Bud¿et, pozycje i szacowane koszty</p>
             </div>
         </div>
-        <div>
-            <a asp-controller="Home" asp-action="CreateShoppingList" class="btn btn-primary me-2">Nowa lista</a>
-            <a asp-controller="Home" asp-action="ShoppingLists" class="btn btn-link">? Powrót</a>
+        <div class="header-actions">
+            <a asp-controller="Home" asp-action="CreateShoppingList" class="btn btn-primary">Nowa lista</a>
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
         </div>
     </div>
 
@@ -89,16 +91,21 @@
                             <div class="mb-1"><strong>Plan:</strong> @list.DesiredDish</div>
                         }
                     </div>
-                    <div class="d-flex gap-2 align-items-center">
-                        <a asp-action="ShoppingListDetails" asp-route-id="@list.Id" class="card-link">Poka¿</a>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <a asp-action="ShoppingListDetails" asp-route-id="@list.Id" class="btn btn-sm btn-outline-primary">Poka¿</a>
                         @if (!list.IsCompleted)
                         {
-                            <form asp-action="CompleteShoppingList" method="post">
+                            <form asp-action="CompleteShoppingList" method="post" class="mb-0">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@list.Id" />
                                 <button type="submit" class="btn btn-sm btn-success">Oznacz jako zrealizowan¹</button>
                             </form>
                         }
+                        <form asp-action="DeleteShoppingList" method="post" class="d-inline mb-0" onsubmit="return confirm('Czy na pewno chcesz usun¹æ tê listê?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@list.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Usuñ</button>
+                        </form>
                     </div>
                 </div>
             }
