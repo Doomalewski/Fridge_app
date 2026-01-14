@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using Fridge_app.Data;
 using System.Linq;
 using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
 
 namespace Fridge_app.Controllers
 {
@@ -20,7 +23,21 @@ namespace Fridge_app.Controllers
         private readonly StoredProductService _storedProductService;
         private readonly GeminiService _geminiService;
         private readonly FridgeDbContext _context;
-        public HomeController(ILogger<HomeController> logger, UserService userService, ProductService productService, StoredProductService storedProductService, GeminiService geminiService, FridgeDbContext context)
+        private readonly IMealService _mealService;
+        private static readonly CompareInfo CategoryComparer = CultureInfo.GetCultureInfo("pl-PL").CompareInfo;
+        private const CompareOptions CategoryCompareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+        private const string WeeklyPlanSessionKey = "WeeklyMealPlan";
+        private static readonly JsonSerializerOptions PlanSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
+        [ActivatorUtilitiesConstructor]
+        public HomeController(
+            ILogger<HomeController> logger,
+            UserService userService,
+            ProductService productService,
+            StoredProductService storedProductService,
+            GeminiService geminiService,
+            FridgeDbContext context,
+            IMealService mealService)
         {
             _logger = logger;
             _userService = userService;
@@ -28,6 +45,7 @@ namespace Fridge_app.Controllers
             _storedProductService = storedProductService;
             _geminiService = geminiService;
             _context = context;
+            _mealService = mealService;
         }
 
         public async Task<IActionResult> Index()
@@ -36,16 +54,28 @@ namespace Fridge_app.Controllers
             {
                 if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
                 {
-                    _logger.LogWarning("Nie uda³o siê odczytaæ Id u¿ytkownika z Claims");
-                    return RedirectToAction("Logout", "User"); // lub inna logika
+                    _logger.LogWarning("Nie uda?o si? odczyta? Id u?ytkownika z Claims");
+                    return RedirectToAction("Logout", "User");
                 }
 
                 var user = await _userService.GetUserByIdAsync(userId);
-                // Renderuje widok dla zalogowanego u¿ytkownika
-                return View("HomeAuthenticated", user);
+                var meals = (await _mealService.GetAllMealsAsync()).ToList();
+
+                var storedPlan = LoadPlanFromSession();
+                var today = DateTime.Today;
+                var todayPlan = storedPlan?.Days?.FirstOrDefault(d => d.Date.Date == today) ?? BuildTodayPlan(meals);
+
+                var vm = new HomeDashboardViewModel
+                {
+                    CurrentUser = user,
+                    AvailableMeals = meals,
+                    TodayPlan = todayPlan
+                };
+
+                return View("HomeAuthenticated", vm);
             }
 
-            // Renderuje widok dla goœcia
+            // Renderuje widok dla go?cia
             return View("HomeGuest");
         }
 
@@ -401,11 +431,80 @@ namespace Fridge_app.Controllers
             item.IsAddedToFridge = true;
         }
 
+        private WeeklyMealDayViewModel BuildTodayPlan(List<Meal> meals)
+        {
+            var today = DateTime.Today;
+            var day = new WeeklyMealDayViewModel { Date = today };
+
+            var breakfastMeals = MealsByCategory(meals, "?niadanie", "Sniadanie", "Breakfast");
+            var lunchMeals = MealsByCategory(meals, "Obiad", "Lunch");
+            var dinnerMeals = MealsByCategory(meals, "Kolacja", "Dinner", "Supper");
+            var snackMeals = MealsByCategory(meals, "Przek?ska", "Przekaska", "Snack");
+
+            day.BreakfastMealId = PickRandomMealId(breakfastMeals);
+            day.LunchMealId = PickRandomMealId(lunchMeals);
+            day.DinnerMealId = PickRandomMealId(dinnerMeals);
+            day.SnackMealId = PickRandomMealId(snackMeals);
+
+            return day;
+        }
+
+        private WeeklyMealPlanViewModel? LoadPlanFromSession()
+        {
+            var serialized = HttpContext.Session.GetString(WeeklyPlanSessionKey);
+            if (string.IsNullOrWhiteSpace(serialized))
+            {
+                return null;
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<WeeklyMealPlanViewModel>(serialized, PlanSerializerOptions);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static List<Meal> MealsByCategory(IEnumerable<Meal> meals, params string[] categories)
+        {
+            if (meals == null)
+            {
+                return new List<Meal>();
+            }
+
+            var normalizedCategories = categories?
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .ToArray() ?? Array.Empty<string>();
+
+            if (normalizedCategories.Length == 0)
+            {
+                return new List<Meal>();
+            }
+
+            return meals
+                .Where(m => m != null && normalizedCategories.Any(c => CategoryComparer.Compare(m.Category?.Trim() ?? string.Empty, c, CategoryCompareOptions) == 0))
+                .ToList();
+        }
+
+        private static int? PickRandomMealId(IReadOnlyList<Meal> meals)
+        {
+            if (meals == null || meals.Count == 0)
+            {
+                return null;
+            }
+
+            var randomIndex = Random.Shared.Next(meals.Count);
+            return meals[randomIndex].Id;
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
         [HttpGet]
         public async Task<IActionResult> SearchProducts(string searchTerm, ProductCategory? category)
         {

@@ -1,9 +1,48 @@
-﻿@model Fridge_app.Models.User
+﻿@model Fridge_app.Models.ViewModels.HomeDashboardViewModel
+@using Fridge_app.Models
+@using System.Globalization
+@using Microsoft.AspNetCore.Html
 @{
     ViewData["Title"] = "Home Page";
+    var meals = Model?.AvailableMeals ?? new List<Meal>();
+    var todayPlan = Model?.TodayPlan;
+    var culture = CultureInfo.GetCultureInfo("pl-PL");
+
+    string MealName(int? id)
+    {
+        if (!id.HasValue)
+        {
+            return "Nie wybrano";
+        }
+        var match = meals.FirstOrDefault(m => m.Id == id.Value);
+        return string.IsNullOrWhiteSpace(match?.Description) ? $"Posiłek #{id.Value}" : match.Description!;
+    }
+
+    IHtmlContent MealLink(int? id)
+    {
+        if (!id.HasValue)
+        {
+            return new HtmlString("<span class=\"text-muted\">Nie wybrano</span>");
+        }
+
+        var label = MealName(id);
+        var url = Url.Action("MealDetails", "User", new { id = id.Value }) ?? "#";
+        return new HtmlString($"<a class=\"meal-link\" href=\"{url}\">{label}</a>");
+    }
 }
 
 <link rel="stylesheet" href="~/css/home.css" />
+<style>
+    .today-meal-list .meal-link {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .today-meal-list .meal-link:hover {
+        text-decoration: underline;
+    }
+</style>
 
 <div class="home-wrapper">
     <div class="home-header">
@@ -18,69 +57,107 @@
         </div>
     </div>
 
-    <div class="dashboard-grid">
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-primary-light">
-                <i class="bi bi-house-door"></i>
+    <div class="dashboard-layout">
+        <div class="dashboard-grid main-grid">
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-primary-light">
+                    <i class="bi bi-house-door"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Moja lodówka</h3>
+                    <p>Zarządzaj zawartością swojej lodówki</p>
+                </div>
+                <a asp-controller="Fridge" asp-action="Index" class="card-link">Przejdź</a>
             </div>
-            <div class="card-content">
-                <h3>Moja lodówka</h3>
-                <p>Zarządzaj zawartością swojej lodówki</p>
+
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-info-light">
+                    <i class="bi bi-book"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Moje przepisy</h3>
+                    <p>Przeglądaj zapisane przepisy</p>
+                </div>
+                <a asp-controller="User" asp-action="MyMeals" class="card-link">Zobacz przepisy</a>
             </div>
-            <a asp-controller="Fridge" asp-action="Index" class="card-link">Przejdź</a>
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-danger-light">
+                    <i class="bi bi-cart-check"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Listy zakupowe</h3>
+                    <p>Planuj zakupy i śledź brakujące produkty</p>
+                </div>
+                <a asp-controller="Home" asp-action="ShoppingLists" class="card-link">Otwórz listy</a>
+            </div>
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-info-light">
+                    <i class="bi bi-calendar-week"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Plan tygodnia</h3>
+                    <p>Zaplanuj posiłki na cały tydzień do przodu</p>
+                </div>
+                <a asp-controller="Meal" asp-action="WeeklyPlan" class="card-link">Zaplanuj tydzień</a>
+            </div>
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-success-light">
+                    <i class="bi bi-list-check"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Lista produktów</h3>
+                    <p>Dodawaj i aktualizuj produkty</p>
+                </div>
+                <a asp-controller="Product" asp-action="Index" class="card-link">Zarządzaj</a>
+            </div>
+
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-warning-light">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Użytkownicy</h3>
+                    <p>Przeglądaj i edytuj konta użytkowników</p>
+                </div>
+                <a asp-controller="User" asp-action="Index" class="card-link">Otwórz</a>
+            </div>
+
+            <div class="dashboard-card animate">
+                <div class="card-icon bg-secondary-light">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Moja kuchnia</h3>
+                    <p>Zarządzaj narzędziami kuchennymi</p>
+                </div>
+                <a asp-controller="User" asp-action="MyKitchen" class="card-link">Otwórz kuchnię</a>
+            </div>
         </div>
 
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-info-light">
-                <i class="bi bi-book"></i>
+        <div class="today-card-wrapper">
+            <div class="dashboard-card animate today-summary-card today-card">
+                <div class="card-icon bg-info-light">
+                    <i class="bi bi-sun"></i>
+                </div>
+                <div class="card-content text-start">
+                    <h3>Dzisiejsze posiłki</h3>
+                    <p class="mb-2 text-muted">@DateTime.Today.ToString("dddd, dd.MM.yyyy", culture)</p>
+                    @if (todayPlan is null || (!todayPlan.BreakfastMealId.HasValue && !todayPlan.LunchMealId.HasValue && !todayPlan.DinnerMealId.HasValue && !todayPlan.SnackMealId.HasValue))
+                    {
+                        <p class="text-muted">Brak zaplanowanych posiłków na dziś. Uzupełnij plan tygodnia.</p>
+                    }
+                    else
+                    {
+                        <ul class="today-meal-list">
+                            <li><strong>Śniadanie:</strong> @MealLink(todayPlan!.BreakfastMealId)</li>
+                            <li><strong>Obiad:</strong> @MealLink(todayPlan!.LunchMealId)</li>
+                            <li><strong>Kolacja:</strong> @MealLink(todayPlan!.DinnerMealId)</li>
+                            <li><strong>Przekąska:</strong> @MealLink(todayPlan!.SnackMealId)</li>
+                        </ul>
+                    }
+                </div>
+                <a asp-controller="Meal" asp-action="WeeklyPlan" class="card-link">Edytuj plan</a>
             </div>
-            <div class="card-content">
-                <h3>Moje przepisy</h3>
-                <p>Przeglądaj zapisane przepisy</p>
-            </div>
-            <a asp-controller="User" asp-action="MyMeals" class="card-link">Zobacz przepisy</a>
-        </div>
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-danger-light">
-                <i class="bi bi-cart-check"></i>
-            </div>
-            <div class="card-content">
-                <h3>Listy zakupowe</h3>
-                <p>Planuj zakupy i śledź brakujące produkty</p>
-            </div>
-            <a asp-controller="Home" asp-action="ShoppingLists" class="card-link">Otwórz listy</a>
-        </div>
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-success-light">
-                <i class="bi bi-list-check"></i>
-            </div>
-            <div class="card-content">
-                <h3>Lista produktów</h3>
-                <p>Dodawaj i aktualizuj produkty</p>
-            </div>
-            <a asp-controller="Product" asp-action="Index" class="card-link">Zarządzaj</a>
-        </div>
-
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-warning-light">
-                <i class="bi bi-people"></i>
-            </div>
-            <div class="card-content">
-                <h3>Użytkownicy</h3>
-                <p>Przeglądaj i edytuj konta użytkowników</p>
-            </div>
-            <a asp-controller="User" asp-action="Index" class="card-link">Otwórz</a>
-        </div>
-
-        <div class="dashboard-card animate">
-            <div class="card-icon bg-secondary-light">
-                <i class="bi bi-tools"></i>
-            </div>
-            <div class="card-content">
-                <h3>Moja kuchnia</h3>
-                <p>Zarządzaj narzędziami kuchennymi</p>
-            </div>
-            <a asp-controller="User" asp-action="MyKitchen" class="card-link">Otwórz kuchnię</a>
         </div>
     </div>
 </div>

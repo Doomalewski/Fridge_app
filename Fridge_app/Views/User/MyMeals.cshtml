@@ -326,55 +326,98 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const cards = document.querySelectorAll('.dashboard-card.animate');
-     cards.forEach((card, index) => {
-  setTimeout(() => {
-    card.classList.add('visible');
-  }, index * 150);
-      });
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 150);
+            });
 
             let selectedLetter = '';
             const letterButtons = document.querySelectorAll('.alphabet-letter');
+            const allLetterButton = document.querySelector('.alphabet-letter[data-letter=""]');
 
             const getSelected = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+
+            const matchesOtherFilters = (card, category, difficulty, time) => {
+                const cardCategory = (card.dataset.category || '').toLowerCase();
+                const cardDifficulty = (card.dataset.difficulty || '').toLowerCase();
+                const totalTime = parseInt(card.dataset.time || '0', 10);
+
+                if (category && cardCategory !== category.toLowerCase()) return false;
+                if (difficulty && cardDifficulty !== difficulty.toLowerCase()) return false;
+
+                if (time) {
+                    switch (time) {
+                        case '15':
+                            if (totalTime > 15) return false;
+                            break;
+                        case '30':
+                            if (totalTime > 30) return false;
+                            break;
+                        case '45':
+                            if (totalTime > 45) return false;
+                            break;
+                        case '45+':
+                            if (totalTime <= 45) return false;
+                            break;
+                    }
+                }
+
+                return true;
+            };
+
+            const updateLetterButtons = (category, difficulty, time) => {
+                const availableLetters = new Set();
+
+                cards.forEach(card => {
+                    if (matchesOtherFilters(card, category, difficulty, time)) {
+                        const letter = (card.dataset.letter || '').trim();
+                        if (letter) {
+                            availableLetters.add(letter);
+                        }
+                    }
+                });
+
+                let shouldReset = false;
+                letterButtons.forEach(button => {
+                    const letter = button.dataset.letter || '';
+                    if (letter === '') {
+                        button.disabled = false;
+                        button.classList.remove('disabled');
+                        return;
+                    }
+
+                    const enabled = availableLetters.has(letter);
+                    button.disabled = !enabled;
+                    button.classList.toggle('disabled', !enabled);
+
+                    if (!enabled && selectedLetter === letter) {
+                        shouldReset = true;
+                    }
+                });
+
+                if (shouldReset) {
+                    selectedLetter = '';
+                    letterButtons.forEach(btn => btn.classList.remove('active'));
+                    if (allLetterButton) {
+                        allLetterButton.classList.add('active');
+                    }
+                }
+            };
 
             const applyMealFilters = () => {
                 const selectedCategory = getSelected('categoryFilter');
                 const selectedDifficulty = getSelected('difficultyFilter');
                 const selectedTime = getSelected('timeFilter');
 
+                updateLetterButtons(selectedCategory, selectedDifficulty, selectedTime);
+
                 cards.forEach(card => {
                     const letter = card.dataset.letter || '';
-                    const category = card.dataset.category || '';
-                    const difficulty = card.dataset.difficulty || '';
-                    const totalTime = parseInt(card.dataset.time || '0', 10);
+                    const matchesFilters = matchesOtherFilters(card, selectedCategory, selectedDifficulty, selectedTime);
+                    const matchesLetter = !selectedLetter || letter === selectedLetter;
 
-                    let isVisible = (!selectedLetter || letter === selectedLetter);
-
-                    if (isVisible && selectedCategory) {
-                        isVisible = category.toLowerCase() === selectedCategory.toLowerCase();
-                    }
-
-                    if (isVisible && selectedDifficulty) {
-                        isVisible = difficulty.toLowerCase() === selectedDifficulty.toLowerCase();
-                    }
-
-                    if (isVisible && selectedTime) {
-                        switch (selectedTime) {
-                            case '15':
-                                isVisible = totalTime <= 15;
-                                break;
-                            case '30':
-                                isVisible = totalTime <= 30;
-                                break;
-                            case '45':
-                                isVisible = totalTime <= 45;
-                                break;
-                            case '45+':
-                                isVisible = totalTime > 45;
-                                break;
-                        }
-                    }
-
+                    const isVisible = matchesFilters && matchesLetter;
                     card.style.display = isVisible ? '' : 'none';
                 });
             };
@@ -382,6 +425,7 @@
             letterButtons.forEach(button => {
                 if (button.disabled) return;
                 button.addEventListener('click', () => {
+                    if (button.disabled) return;
                     selectedLetter = button.dataset.letter || '';
                     letterButtons.forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');

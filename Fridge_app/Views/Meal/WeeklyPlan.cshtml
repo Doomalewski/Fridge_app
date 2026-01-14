@@ -1,0 +1,284 @@
+@model Fridge_app.Models.ViewModels.WeeklyMealPlanViewModel
+@using Fridge_app.Models
+@using System.Globalization
+@{
+    ViewData["Title"] = "Plan posi³ków na tydzieñ";
+    var meals = Model?.AvailableMeals ?? new List<Meal>();
+    var culture = CultureInfo.GetCultureInfo("pl-PL");
+    var comparer = culture.CompareInfo;
+    CompareOptions compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+    var today = DateTime.Today;
+    var startDate = Model?.WeekStart ?? today;
+    var endDate = startDate.AddDays(6);
+
+    string MealName(int? id)
+    {
+        if (!id.HasValue)
+        {
+            return "Nie wybrano";
+        }
+
+        var match = meals.FirstOrDefault(m => m.Id == id.Value);
+        var name = match?.Description;
+        return string.IsNullOrWhiteSpace(name) ? $"Posi³ek #{id.Value}" : name!;
+    }
+
+    string OptionLabel(Meal meal)
+    {
+        return string.IsNullOrWhiteSpace(meal.Description) ? $"Posi³ek #{meal.Id}" : meal.Description;
+    }
+
+    List<Meal> MealsByCategory(params string[] categories) =>
+        meals
+            .Where(m => categories.Any(c => comparer.Compare(m.Category?.Trim() ?? string.Empty, c, compareOptions) == 0))
+            .ToList();
+
+    var breakfastMeals = MealsByCategory("Œniadanie", "Sniadanie", "Breakfast");
+    var lunchMeals = MealsByCategory("Obiad", "Lunch");
+    var dinnerMeals = MealsByCategory("Kolacja", "Dinner", "Supper");
+    var snackMeals = MealsByCategory("Przek¹ska", "Przekaska", "Snack");
+}
+
+<link rel="stylesheet" href="~/css/home.css" />
+
+<div class="home-wrapper">
+    <div class="home-header">
+        <div class="welcome-box">
+            <div class="welcome-icon">
+                <i class="bi bi-calendar-week"></i>
+            </div>
+            <div>
+                <h1 class="welcome-title">Plan tygodniowych posi³ków</h1>
+                <p class="welcome-subtitle">Przygotuj zestaw œniadañ, obiadów, kolacji i przek¹sek na najbli¿sze 7 dni.</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="javascript:history.back()" class="back-link">
+                <i class="bi bi-arrow-left"></i> Powrót
+            </a>
+        </div>
+    </div>
+
+    @if (Model?.AutoSelected == true)
+    {
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="bi bi-magic me-2"></i>
+            <span>Plan zosta³ wstêpnie uzupe³niony losowo wybranymi posi³kami. Zmieñ je, jeœli chcesz, przed zapisaniem.</span>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["Success"]
+        </div>
+    }
+
+    <form asp-action="WeeklyPlan" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="WeekStart" />
+        <div class="shopping-card mb-4">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Zakres planu</label>
+                    <p class="mb-1 fw-semibold">@startDate.ToString("dd.MM.yyyy") - @endDate.ToString("dd.MM.yyyy")</p>
+                    <small class="text-muted">Plan zawsze zaczyna siê od dzisiejszego dnia.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Liczba zaplanowanych posi³ków</label>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <span class="badge bg-primary">Œniadanie: @(Model?.Days?.Count(d => d.BreakfastMealId.HasValue) ?? 0)</span>
+                        <span class="badge bg-success">Obiad: @(Model?.Days?.Count(d => d.LunchMealId.HasValue) ?? 0)</span>
+                        <span class="badge bg-dark">Kolacja: @(Model?.Days?.Count(d => d.DinnerMealId.HasValue) ?? 0)</span>
+                        <span class="badge bg-info text-dark">Przek¹ska: @(Model?.Days?.Count(d => d.SnackMealId.HasValue) ?? 0)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            @for (var i = 0; i < (Model?.Days?.Count ?? 0); i++)
+            {
+                var day = Model!.Days[i];
+                var isToday = day.Date.Date == today;
+                <div class="dashboard-card animate @(isToday ? "today-card" : "")" style="height:auto;" data-day-index="@i">
+                    <div class="card-content text-start">
+                        <input type="hidden" asp-for="Days[i].Date" />
+                        <div class="d-flex flex-column align-items-start mb-2">
+                            <h3 class="mb-0">@day.Date.ToString("dddd", culture).ToUpperInvariant()</h3>
+                            <span class="badge bg-light text-dark mt-1">@day.Date.ToString("dd.MM.yyyy")</span>
+                            @if (isToday)
+                            {
+                                <span class="badge bg-primary today-badge">Dziœ</span>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Œniadanie</label>
+                            <select asp-for="Days[i].BreakfastMealId" class="form-select" data-meal-picker="true" data-meal-type="breakfast" data-day-index="@i">
+                                <option value="">Wybierz posi³ek</option>
+                                @if (!breakfastMeals.Any())
+                                {
+                                    <option disabled>Brak zapisanych œniadañ</option>
+                                }
+                                else
+                                {
+                                    foreach (var meal in breakfastMeals)
+                                    {
+                                        <option value="@meal.Id">@OptionLabel(meal)</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">@MealName(day.BreakfastMealId)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Obiad</label>
+                            <select asp-for="Days[i].LunchMealId" class="form-select" data-meal-picker="true" data-meal-type="lunch" data-day-index="@i">
+                                <option value="">Wybierz posi³ek</option>
+                                @if (!lunchMeals.Any())
+                                {
+                                    <option disabled>Brak zapisanych obiadów</option>
+                                }
+                                else
+                                {
+                                    foreach (var meal in lunchMeals)
+                                    {
+                                        <option value="@meal.Id">@OptionLabel(meal)</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">@MealName(day.LunchMealId)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Kolacja</label>
+                            <select asp-for="Days[i].DinnerMealId" class="form-select" data-meal-picker="true" data-meal-type="dinner" data-day-index="@i">
+                                <option value="">Wybierz posi³ek</option>
+                                @if (!dinnerMeals.Any())
+                                {
+                                    <option disabled>Brak zapisanych kolacji</option>
+                                }
+                                else
+                                {
+                                    foreach (var meal in dinnerMeals)
+                                    {
+                                        <option value="@meal.Id">@OptionLabel(meal)</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">@MealName(day.DinnerMealId)</small>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Przek¹ska</label>
+                            <select asp-for="Days[i].SnackMealId" class="form-select" data-meal-picker="true" data-meal-type="snack" data-day-index="@i">
+                                <option value="">Wybierz posi³ek</option>
+                                @if (!snackMeals.Any())
+                                {
+                                    <option disabled>Brak zapisanych przek¹sek</option>
+                                }
+                                else
+                                {
+                                    foreach (var meal in snackMeals)
+                                    {
+                                        <option value="@meal.Id">@OptionLabel(meal)</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">@MealName(day.SnackMealId)</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="card-link">Zapisz plan</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.animate');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 100);
+            });
+            attachAutoSave();
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function () {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function collectPlanPayload() {
+            const weekStartInput = document.querySelector('input[name="WeekStart"]');
+            if (!weekStartInput) return null;
+
+            const dayCards = document.querySelectorAll('[data-day-index]');
+            const days = Array.from(dayCards).map(card => {
+                const idx = card.dataset.dayIndex;
+                const dateInput = card.querySelector(`input[name="Days[${idx}].Date"]`);
+                const parseSelect = (name) => {
+                    const select = card.querySelector(`select[name="Days[${idx}].${name}"]`);
+                    const value = select?.value;
+                    return value ? parseInt(value) : null;
+                };
+
+                return {
+                    date: dateInput?.value,
+                    breakfastMealId: parseSelect('BreakfastMealId'),
+                    lunchMealId: parseSelect('LunchMealId'),
+                    dinnerMealId: parseSelect('DinnerMealId'),
+                    snackMealId: parseSelect('SnackMealId')
+                };
+            });
+
+            return {
+                weekStart: weekStartInput.value,
+                days
+            };
+        }
+
+        function attachAutoSave() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            if (!token) return;
+
+            const debouncedSave = debounce(async () => {
+                const payload = collectPlanPayload();
+                if (!payload) return;
+
+                try {
+                    const response = await fetch('@Url.Action("SaveWeeklyPlan", "Meal")', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        console.warn('Nie uda³o siê zapisaæ planu tygodniowego', response.status, await response.text());
+                    }
+                } catch (error) {
+                    console.warn('Nie uda³o siê zapisaæ planu tygodniowego', error);
+                }
+            }, 300);
+
+            document.querySelectorAll('[data-meal-picker="true"]').forEach(select => {
+                select.addEventListener('change', debouncedSave);
+            });
+        }
+    </script>
+}

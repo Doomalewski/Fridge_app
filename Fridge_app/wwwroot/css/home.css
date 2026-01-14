@@ -93,6 +93,28 @@
     color: #666;
 }
 
+/* === Layout for main grid + today card === */
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.dashboard-layout .main-grid {
+    width: 100%;
+}
+
+@media (max-width: 992px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .today-card-wrapper {
+        order: -1;
+    }
+}
+
 /* === Siatka === */
 .dashboard-grid {
     display: grid;
@@ -138,6 +160,28 @@
 .dashboard-card-meal {
     height: auto;
     min-height: 420px;
+}
+
+/* === Today card === */
+.today-summary-card {
+    height: auto;
+    text-align: left;
+}
+
+.today-meal-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.today-meal-list li {
+    background: #f7f9fc;
+    border-radius: 0.9rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #e3e8ef;
 }
 
 /* === Ikony === */
@@ -387,4 +431,15 @@
 
 .form-actions .btn {
     min-width: 160px;
+}
+
+/* Highlight for current day in weekly plan */
+.today-card {
+    border: 2px solid #0d6efd;
+    box-shadow: 0 12px 35px rgba(13, 110, 253, 0.25);
+}
+
+.today-badge {
+    margin-top: 0.35rem;
+    font-weight: 700;
 }

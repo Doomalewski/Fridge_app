@@ -332,36 +332,76 @@
 
         let selectedLetter = '';
 
+        function matchesExpiry(card, selectedExpiry) {
+            const daysLeft = parseFloat(card.dataset.daysLeft);
+            const freshness = card.dataset.freshness;
+
+            switch (selectedExpiry) {
+                case 'expired':
+                    return freshness === 'expired' || daysLeft < 0;
+                case '3days':
+                    return daysLeft <= 3 && daysLeft >= 0;
+                case '7days':
+                    return daysLeft <= 7 && daysLeft >= 0;
+                case 'fresh':
+                    return daysLeft > 7;
+                default:
+                    return true;
+            }
+        }
+
+        function updateAlphabetButtons(selectedExpiry) {
+            const letterButtons = document.querySelectorAll('.alphabet-letter');
+            const availableLetters = new Set();
+
+            document.querySelectorAll('.dashboard-card').forEach(card => {
+                if (matchesExpiry(card, selectedExpiry)) {
+                    const letter = (card.dataset.letter || '').trim();
+                    if (letter) {
+                        availableLetters.add(letter);
+                    }
+                }
+            });
+
+            let shouldResetSelection = false;
+            letterButtons.forEach(button => {
+                const letter = button.dataset.letter || '';
+                if (letter === '') {
+                    button.disabled = false;
+                    button.classList.remove('disabled');
+                    return;
+                }
+
+                const enabled = availableLetters.has(letter);
+                button.disabled = !enabled;
+                button.classList.toggle('disabled', !enabled);
+
+                if (!enabled && selectedLetter === letter) {
+                    shouldResetSelection = true;
+                }
+            });
+
+            if (shouldResetSelection) {
+                selectedLetter = '';
+                letterButtons.forEach(btn => btn.classList.remove('active'));
+                const allBtn = document.querySelector('.alphabet-letter[data-letter=""]');
+                if (allBtn) {
+                    allBtn.classList.add('active');
+                }
+            }
+        }
+
         function applyFilters() {
             const selectedExpiry = document.querySelector('input[name="expiryFilter"]:checked')?.value || 'all';
+
+            updateAlphabetButtons(selectedExpiry);
+
             document.querySelectorAll('.dashboard-card').forEach(card => {
-                const daysLeft = parseFloat(card.dataset.daysLeft);
-                const freshness = card.dataset.freshness;
                 const letter = card.dataset.letter || '';
-                let isVisible = true;
+                const matches = matchesExpiry(card, selectedExpiry);
+                const matchesLetter = !selectedLetter || letter === selectedLetter;
 
-                switch (selectedExpiry) {
-                    case 'expired':
-                        isVisible = freshness === 'expired' || daysLeft < 0;
-                        break;
-                    case '3days':
-                        isVisible = daysLeft <= 3 && daysLeft >= 0;
-                        break;
-                    case '7days':
-                        isVisible = daysLeft <= 7 && daysLeft >= 0;
-                        break;
-                    case 'fresh':
-                        isVisible = daysLeft > 7;
-                        break;
-                    default:
-                        isVisible = true;
-                        break;
-                }
-
-                if (selectedLetter && letter !== selectedLetter) {
-                    isVisible = false;
-                }
-
+                const isVisible = matches && matchesLetter;
                 card.style.display = isVisible ? '' : 'none';
             });
         }
@@ -374,6 +414,7 @@
             document.querySelectorAll('.alphabet-letter').forEach(button => {
                 if (button.disabled) return;
                 button.addEventListener('click', () => {
+                    if (button.disabled) return;
                     selectedLetter = button.dataset.letter || '';
                     document.querySelectorAll('.alphabet-letter').forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
