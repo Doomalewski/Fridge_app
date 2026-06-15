@@ -1,21 +1,17 @@
+using Fridge_app.Data;
 using Fridge_app.Models;
 using Fridge_app.Models.ViewModels;
 using Fridge_app.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Security.Claims;
-using System.Collections.Generic;
-using Fridge_app.Data;
-using System.Linq;
-using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+using System.Diagnostics;
+using System.Globalization;
+using System.Security.Claims;
 
 namespace Fridge_app.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : AppControllerBase
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserService _userService;
@@ -24,10 +20,7 @@ namespace Fridge_app.Controllers
         private readonly GeminiService _geminiService;
         private readonly FridgeDbContext _context;
         private readonly IMealService _mealService;
-        private static readonly CompareInfo CategoryComparer = CultureInfo.GetCultureInfo("pl-PL").CompareInfo;
-        private const CompareOptions CategoryCompareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
-        private const string WeeklyPlanSessionKey = "WeeklyMealPlan";
-        private static readonly JsonSerializerOptions PlanSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
 
         [ActivatorUtilitiesConstructor]
         public HomeController(
@@ -101,7 +94,7 @@ namespace Fridge_app.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var lists = await _context.ShoppingLists
                 .Where(sl => sl.UserId == userId)
                 .Include(sl => sl.Items)
@@ -171,7 +164,7 @@ namespace Fridge_app.Controllers
 
                 try
                 {
-                    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                    var userId = GetCurrentUserId();
                     var list = new ShoppingList
                     {
                         Name = model.Name,
@@ -194,12 +187,12 @@ namespace Fridge_app.Controllers
                     _context.ShoppingLists.Add(list);
                     await _context.SaveChangesAsync();
 
-                    TempData["Success"] = "Lista zosta³a zapisana.";
+                    TempData["Success"] = "Lista zostaï¿½a zapisana.";
                     return RedirectToAction(nameof(MyShoppingLists));
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty, $"Nie uda³o siê zapisaæ listy: {ex.Message}");
+                    ModelState.AddModelError(string.Empty, $"Nie udaï¿½o siï¿½ zapisaï¿½ listy: {ex.Message}");
                     return View(model);
                 }
             }
@@ -210,7 +203,7 @@ namespace Fridge_app.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Nie uda³o siê wygenerowaæ listy: {ex.Message}");
+                ModelState.AddModelError(string.Empty, $"Nie udaï¿½o siï¿½ wygenerowaï¿½ listy: {ex.Message}");
             }
 
             return View(model);
@@ -224,14 +217,14 @@ namespace Fridge_app.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var list = await _context.ShoppingLists
                 .Include(sl => sl.Items)
                 .FirstOrDefaultAsync(sl => sl.Id == id && sl.UserId == userId);
 
             if (list == null)
             {
-                TempData["Error"] = "Lista nie zosta³a znaleziona.";
+                TempData["Error"] = "Lista nie zostaï¿½a znaleziona.";
                 return RedirectToAction(nameof(MyShoppingLists));
             }
 
@@ -250,7 +243,7 @@ namespace Fridge_app.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var item = await _context.ShoppingListItems
                 .Include(i => i.ShoppingList)
                 .FirstOrDefaultAsync(i => i.Id == itemId && i.ShoppingList!.UserId == userId);
@@ -263,14 +256,14 @@ namespace Fridge_app.Controllers
 
             if (item.IsAddedToFridge)
             {
-                TempData["Success"] = "Pozycja zosta³a ju¿ dodana do lodówki.";
+                TempData["Success"] = "Pozycja zostaï¿½a juï¿½ dodana do lodï¿½wki.";
                 return RedirectToAction(nameof(ShoppingListDetails), new { id = item.ShoppingListId });
             }
 
             await AddItemToFridgeInternal(userId, item);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Dodano {item.Name} do lodówki.";
+            TempData["Success"] = $"Dodano {item.Name} do lodï¿½wki.";
             return RedirectToAction(nameof(ShoppingListDetails), new { id = item.ShoppingListId });
         }
 
@@ -283,20 +276,20 @@ namespace Fridge_app.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var list = await _context.ShoppingLists
                 .Include(sl => sl.Items)
                 .FirstOrDefaultAsync(sl => sl.Id == id && sl.UserId == userId);
 
             if (list == null)
             {
-                TempData["Error"] = "Lista nie zosta³a znaleziona.";
+                TempData["Error"] = "Lista nie zostaï¿½a znaleziona.";
                 return RedirectToAction(nameof(MyShoppingLists));
             }
 
             if (list.IsCompleted)
             {
-                TempData["Success"] = "Ta lista zosta³a ju¿ oznaczona jako zrealizowana.";
+                TempData["Success"] = "Ta lista zostaï¿½a juï¿½ oznaczona jako zrealizowana.";
                 return RedirectToAction(nameof(ShoppingListDetails), new { id });
             }
 
@@ -309,7 +302,7 @@ namespace Fridge_app.Controllers
             list.CompletedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Lista zosta³a oznaczona jako zrealizowana, a produkty dodano do lodówki.";
+            TempData["Success"] = "Lista zostaï¿½a oznaczona jako zrealizowana, a produkty dodano do lodï¿½wki.";
             return RedirectToAction(nameof(ShoppingListDetails), new { id });
         }
 
@@ -322,35 +315,35 @@ namespace Fridge_app.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var list = await _context.ShoppingLists
                 .Include(sl => sl.Items)
                 .FirstOrDefaultAsync(sl => sl.Id == id && sl.UserId == userId);
 
             if (list == null)
             {
-                TempData["Error"] = "Lista nie zosta³a znaleziona.";
+                TempData["Error"] = "Lista nie zostaï¿½a znaleziona.";
                 return RedirectToAction(nameof(MyShoppingLists));
             }
 
             _context.ShoppingLists.Remove(list);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Lista zosta³a usuniêta.";
+            TempData["Success"] = "Lista zostaï¿½a usuniï¿½ta.";
             return RedirectToAction(nameof(MyShoppingLists));
         }
 
         private static IEnumerable<string> GetCuisineOptions() => new[]
         {
             "Polska",
-            "W³oska",
-            "Œródziemnomorska",
+            "Wï¿½oska",
+            "ï¿½rï¿½dziemnomorska",
             "Azjatycka",
-            "Meksykañska",
-            "Amerykañska",
+            "Meksykaï¿½ska",
+            "Amerykaï¿½ska",
             "Indyjska",
-            "Wegañska",
-            "Wegetariañska"
+            "Wegaï¿½ska",
+            "Wegetariaï¿½ska"
         };
 
         private static double ParseQuantity(string? quantity)
@@ -449,54 +442,13 @@ namespace Fridge_app.Controllers
         }
 
         private WeeklyMealPlanViewModel? LoadPlanFromSession()
-        {
-            var serialized = HttpContext.Session.GetString(WeeklyPlanSessionKey);
-            if (string.IsNullOrWhiteSpace(serialized))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JsonSerializer.Deserialize<WeeklyMealPlanViewModel>(serialized, PlanSerializerOptions);
-            }
-            catch
-            {
-                return null;
-            }
-        }
+            => WeeklyPlanHelpers.LoadFromSession(HttpContext.Session);
 
         private static List<Meal> MealsByCategory(IEnumerable<Meal> meals, params string[] categories)
-        {
-            if (meals == null)
-            {
-                return new List<Meal>();
-            }
-
-            var normalizedCategories = categories?
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .ToArray() ?? Array.Empty<string>();
-
-            if (normalizedCategories.Length == 0)
-            {
-                return new List<Meal>();
-            }
-
-            return meals
-                .Where(m => m != null && normalizedCategories.Any(c => CategoryComparer.Compare(m.Category?.Trim() ?? string.Empty, c, CategoryCompareOptions) == 0))
-                .ToList();
-        }
+            => WeeklyPlanHelpers.MealsByCategory(meals, categories);
 
         private static int? PickRandomMealId(IReadOnlyList<Meal> meals)
-        {
-            if (meals == null || meals.Count == 0)
-            {
-                return null;
-            }
-
-            var randomIndex = Random.Shared.Next(meals.Count);
-            return meals[randomIndex].Id;
-        }
+            => WeeklyPlanHelpers.PickRandomMealId(meals);
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -515,20 +467,20 @@ namespace Fridge_app.Controllers
         public async Task<IActionResult> AddProduct([FromBody] AddProductViewModel model)
         {
             if (!User.Identity.IsAuthenticated)
-                return Unauthorized(new { error = "U¿ytkownik niezalogowany" });
+                return Unauthorized(new { error = "Uï¿½ytkownik niezalogowany" });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { error = "Nieprawid³owe dane formularza" });
+                return BadRequest(new { error = "Nieprawidï¿½owe dane formularza" });
 
             try
             {
-                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var userId = GetCurrentUserId();
                 await _storedProductService.AddProductToFridgeAsync(userId, model);
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "B³¹d dodawania produktu");
+                _logger.LogError(ex, "Bï¿½ï¿½d dodawania produktu");
                 return StatusCode(500, new { error = ex.Message });
             }
         }

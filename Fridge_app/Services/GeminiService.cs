@@ -90,28 +90,28 @@ namespace Fridge_app.Services
             var languageInstruction = GetLanguageInstruction(preferences?.Language ?? "pl");
 
             var prompt = languageInstruction + Environment.NewLine + Environment.NewLine +
-             "Na podstawie poni�szych danych wygeneruj propozycj� posi�ku w formacie czystego JSON zgodnego ze schematem." + Environment.NewLine +
+             "Based on the following data, generate a meal proposal in pure JSON format matching the schema below." + Environment.NewLine +
       Environment.NewLine +
-             "Sk�adniki (produkty z lod�wki):" + Environment.NewLine +
+             "Ingredients (products from fridge):" + Environment.NewLine +
          productsString + Environment.NewLine +
              Environment.NewLine +
-               "Dost�pne narz�dzia kuchenne:" + Environment.NewLine +
+               "Available kitchen tools:" + Environment.NewLine +
        cookingToolsString + Environment.NewLine +
-            (string.IsNullOrWhiteSpace(preferencesString) ? "" : "Preferencje u�ytkownika:" + Environment.NewLine + preferencesString + Environment.NewLine) +
+            (string.IsNullOrWhiteSpace(preferencesString) ? "" : "User preferences:" + Environment.NewLine + preferencesString + Environment.NewLine) +
           "---" + Environment.NewLine +
-               "Wygeneruj obiekt JSON zgodny ze schematem:" + Environment.NewLine +
+               "Generate a JSON object matching this schema:" + Environment.NewLine +
              "{\"Description\": \"string\",\"Calories\": number,\"Category\": \"Breakfast | Lunch | Dinner | Snack | Other\",\"Recipe\": {\"Name\": \"string\",\"Difficulty\": \"Easy | Medium | Hard\",\"CreatedAt\": \"yyyy-MM-ddTHH:mm:ss\",\"Ingridients\": [{\"ProductId\": number, \"Amount\": number}],\"Steps\": [{\"StepNumber\": number, \"Instruction\": \"string\", \"StepTime\": number}],\"CookingTools\": [{\"Id\": number, \"Name\": \"string\"}]},\"SelectedProducts\": [{\"ProductId\": number, \"Amount\": number}]}" +
          Environment.NewLine + "---" + Environment.NewLine +
-       "Zasady:" + Environment.NewLine +
-      "- Odpowied� MUSI by� czystym JSON-em bez komentarzy, opisu, ani dodatkowego tekstu." + Environment.NewLine +
-           "- Wszystkie warto�ci tekstowe w podw�jnych cudz�ach." + Environment.NewLine +
-              "- Difficulty: tylko Easy, Medium, Hard." + Environment.NewLine +
-           "- Category: tylko Breakfast, Lunch, Dinner, Snack, Other." + Environment.NewLine +
-           "- Amount podawaj w gramach lub mililitrach (bez jednostek, tylko liczba)." + Environment.NewLine +
-            "- U�ywaj sk�adnik�w tylko z listy produkt�w." + Environment.NewLine +
-            "- Narz�dzia ogranicz do tych dost�pnych w sekcji Dost�pne narz�dzia kuchenne." + Environment.NewLine +
-           "- Czas (StepTime) w minutach." + Environment.NewLine +
-        "- CreatedAt ustaw na bie��c� dat�.";
+       "Rules:" + Environment.NewLine +
+      "- Response MUST be pure JSON — no comments, explanations, or extra text." + Environment.NewLine +
+           "- All text values in double quotes." + Environment.NewLine +
+              "- Difficulty: only Easy, Medium, Hard." + Environment.NewLine +
+           "- Category: only Breakfast, Lunch, Dinner, Snack, Other." + Environment.NewLine +
+           "- Amount in grams or milliliters (number only, no units)." + Environment.NewLine +
+            "- Use only ingredients from the provided product list." + Environment.NewLine +
+            "- Limit tools to those listed in Available kitchen tools section." + Environment.NewLine +
+           "- StepTime in minutes." + Environment.NewLine +
+        "- CreatedAt set to current date.";
 
             try
             {
@@ -150,8 +150,8 @@ namespace Fridge_app.Services
                     }
                 }
 
-                mealViewModel.AvailableProducts = _productService.GetAllProductsAsync().Result.ToList();
-                mealViewModel.Calories = await _productService.getCaloriesFromProductsWithAmounts(mealViewModel.SelectedProducts);
+                mealViewModel.AvailableProducts = (await _productService.GetAllProductsAsync()).ToList();
+                mealViewModel.Calories = await _productService.GetCaloriesFromProductsWithAmountsAsync(mealViewModel.SelectedProducts);
 
                 return mealViewModel;
             }

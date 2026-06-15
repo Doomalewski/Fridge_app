@@ -1,27 +1,15 @@
-﻿using Fridge_app.Extensions;
-using Fridge_app.Models;
+﻿using Fridge_app.Models;
 using Fridge_app.Models.ViewModels;
 using Fridge_app.Repositories;
 using Fridge_app.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Runtime.CompilerServices;
-using System.Globalization;
-using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 
 namespace Fridge_app.Controllers
 {
-
-    public class MealController : Controller
+    public class MealController : AppControllerBase
     {
         private readonly IMealService _mealService;
         private readonly IRepository<Product> _productRepository;
-        private static readonly CompareInfo CategoryComparer = CultureInfo.GetCultureInfo("pl-PL").CompareInfo;
-        private const CompareOptions CategoryCompareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
-        private const string WeeklyPlanSessionKey = "WeeklyMealPlan";
-        private static readonly JsonSerializerOptions PlanSerializerOptions = new() { PropertyNameCaseInsensitive = true };
 
         public MealController(
             IMealService mealService,
@@ -50,7 +38,7 @@ namespace Fridge_app.Controllers
 
                 return View(viewModel);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return View("Error");
             }
@@ -62,8 +50,6 @@ namespace Fridge_app.Controllers
             ModelState.Remove("Recipe.MakingSteps");
             if (ModelState.IsValid)
             {
-                var validCategories = new[] { "Śniadanie", "Obiad", "Kolacja", "Przekąska", "Deser" };
-
                 var recipe = new Recipe
                 {
                     Difficulty = model.Recipe.Difficulty
@@ -205,66 +191,15 @@ namespace Fridge_app.Controllers
         }
 
         private static List<Meal> MealsByCategory(IEnumerable<Meal> meals, params string[] categories)
-        {
-            if (meals == null)
-            {
-                return new List<Meal>();
-            }
-
-            var normalizedCategories = categories?
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .ToArray() ?? Array.Empty<string>();
-
-            if (normalizedCategories.Length == 0)
-            {
-                return new List<Meal>();
-            }
-
-            return meals
-                .Where(m => m != null && normalizedCategories.Any(c => CategoryComparer.Compare(m.Category?.Trim() ?? string.Empty, c, CategoryCompareOptions) == 0))
-                .ToList();
-        }
+            => WeeklyPlanHelpers.MealsByCategory(meals, categories);
 
         private static int? PickRandomMealId(IReadOnlyList<Meal> meals)
-        {
-            if (meals == null || meals.Count == 0)
-            {
-                return null;
-            }
-
-            var randomIndex = Random.Shared.Next(meals.Count);
-            return meals[randomIndex].Id;
-        }
+            => WeeklyPlanHelpers.PickRandomMealId(meals);
 
         private WeeklyMealPlanViewModel? LoadPlanFromSession()
-        {
-            var serialized = HttpContext.Session.GetString(WeeklyPlanSessionKey);
-            if (string.IsNullOrWhiteSpace(serialized))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JsonSerializer.Deserialize<WeeklyMealPlanViewModel>(serialized, PlanSerializerOptions);
-            }
-            catch
-            {
-                return null;
-            }
-        }
+            => WeeklyPlanHelpers.LoadFromSession(HttpContext.Session);
 
         private void SavePlanToSession(WeeklyMealPlanViewModel model)
-        {
-            var snapshot = new WeeklyMealPlanViewModel
-            {
-                WeekStart = model.WeekStart,
-                Days = model.Days ?? new List<WeeklyMealDayViewModel>(),
-                AutoSelected = model.AutoSelected
-            };
-
-            var serialized = JsonSerializer.Serialize(snapshot);
-            HttpContext.Session.SetString(WeeklyPlanSessionKey, serialized);
-        }
+            => WeeklyPlanHelpers.SaveToSession(HttpContext.Session, model);
     }
 }

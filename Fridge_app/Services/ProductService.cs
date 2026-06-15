@@ -30,16 +30,16 @@ namespace Fridge_app.Services
 
             return await _productRepository.FindAsync(predicate);
         }
-        public async Task<int> getCaloriesFromProductsWithAmounts(List<SelectedProductViewModel> productsWithAmounts)
+        public async Task<int> GetCaloriesFromProductsWithAmountsAsync(List<SelectedProductViewModel> productsWithAmounts)
         {
             var calories = 0;
             var products = await _productRepository.GetAllAsync();
-            foreach (var product in productsWithAmounts)
+            foreach (var item in productsWithAmounts)
             {
-                var prod = products.FirstOrDefault(p => p.Id == product.ProductId);
-                if (prod != null)
+                var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product != null)
                 {
-                    calories += (prod.Kcal * (int)product.Amount) / 100;
+                    calories += (product.Kcal * (int)item.Amount) / 100;
                 }
             }
             return calories;

@@ -1,17 +1,19 @@
 ﻿using Fridge_app.Data;
-using Fridge_app.Models.ViewModels;
+using Fridge_app.Exceptions;
 using Fridge_app.Models;
 using Fridge_app.Models.Enums;
-using Fridge_app.Exceptions;
+using Fridge_app.Models.ViewModels;
 using Fridge_app.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
-public class UserController : Controller
+namespace Fridge_app.Controllers
 {
+    public class UserController : AppControllerBase
+    {
     private readonly FridgeDbContext _context;
     private readonly UserService _userService;
     private readonly GeminiService _geminiService;
@@ -140,7 +142,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var meals = await _context.Meals
                 .Where(m => m.UserId == userId)
@@ -169,7 +171,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var meal = await _context.Meals
             .Include(m => m.Recipe)
@@ -279,7 +281,7 @@ public class UserController : Controller
                 return RedirectToAction("Login");
             }
 
-            var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var currentUserId = GetCurrentUserId();
 
             var sourceMeal = await _context.Meals
                 .Include(m => m.Recipe)
@@ -352,7 +354,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var user = await _context.Users
                 .Include(u => u.CookingTools)
@@ -380,7 +382,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var user = await _context.Users
                 .Include(u => u.CookingTools)
@@ -419,7 +421,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var user = await _context.Users
                 .Include(u => u.CookingTools)
@@ -460,7 +462,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var user = await _userService.GetUserByIdAsync(userId);
 
             if (user == null)
@@ -506,7 +508,7 @@ public class UserController : Controller
                 return RedirectToAction("Dashboard");
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var user = await _userService.GetUserByIdAsync(userId);
 
             var meal = new Meal
@@ -608,7 +610,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var meal = await _context.Meals
                .Include(m => m.Recipe)
@@ -642,7 +644,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var user = await _context.Users
                 .Include(u => u.HumanStats)
@@ -753,7 +755,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var user = await _context.Users
                 .Include(u => u.HumanStats)
@@ -903,7 +905,7 @@ public class UserController : Controller
     {
         try
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
 
             var result = _nutritionCalculator.CalculateNutritionTargets(
    weightKg: (double)currentWeight,
@@ -938,4 +940,5 @@ public class UserController : Controller
             return RedirectToAction("AccountSettings");
         }
     }
+}
 }

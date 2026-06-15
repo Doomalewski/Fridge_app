@@ -2,11 +2,10 @@
 using Fridge_app.Models;
 using Fridge_app.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Fridge_app.Controllers
 {
-    public class FridgeController : Controller
+    public class FridgeController : AppControllerBase
     {
         private readonly ProductService _productService;
         private readonly StoredProductService _storedProductService;
@@ -25,7 +24,7 @@ namespace Fridge_app.Controllers
             if (!User.Identity.IsAuthenticated)
                 return RedirectToAction("Login", "User");
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = GetCurrentUserId();
             var fridgeItems = await _storedProductService.GetUserFridgeAsync(userId);
 
             var userModel = new User
@@ -35,8 +34,6 @@ namespace Fridge_app.Controllers
 
             return View(userModel);
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> AddProduct(ProductSearchViewModel searchModel)
@@ -61,11 +58,11 @@ namespace Fridge_app.Controllers
             {
                 try
                 {
-                    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                    var userId = GetCurrentUserId();
                     await _storedProductService.AddProductToFridgeAsync(userId, model);
                     return RedirectToAction("Index", "Home");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ModelState.AddModelError("", "Wystąpił błąd podczas zapisywania produktu");
                 }

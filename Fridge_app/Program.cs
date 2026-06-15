@@ -27,17 +27,12 @@ builder.Services.AddSession(options =>
 });
 builder.Services.Configure<GeminiServiceOptions>(
    builder.Configuration.GetSection(GeminiServiceOptions.SectionName));
-builder.Services.AddScoped<ProductService>();
-builder.Services.AddScoped<IRepository<Product>, EfCoreRepository<Product>>();
-builder.Services.AddScoped<IRepository<StoredProduct>, EfCoreRepository<StoredProduct>>();
+// Generic open-generic registration covers all IRepository<T> needs
+builder.Services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<StoredProductService>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IMealService, MealService>();
-builder.Services.AddScoped<IRepository<Meal>, EfCoreRepository<Meal>>();
-builder.Services.AddScoped<IRepository<Recipe>, EfCoreRepository<Recipe>>();
-builder.Services.AddScoped<IRepository<ProductWithAmount>, EfCoreRepository<ProductWithAmount>>();
 builder.Services.AddHttpClient<GeminiService>();
 builder.Services.AddScoped<NutritionCalculatorService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
