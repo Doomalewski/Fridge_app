@@ -75,7 +75,6 @@ namespace Fridge_app.Controllers
                 return View("HomeAuthenticated", vm);
             }
 
-            // Renderuje widok dla go?cia
             return View("HomeGuest");
         }
 

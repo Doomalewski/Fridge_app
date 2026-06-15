@@ -47,8 +47,7 @@
 
             video.load();
 
-            // Start animacji po pierwszym kliknięciu
-            document.body.addEventListener("click", function () {
+                         document.body.addEventListener("click", function () {
                 video.play().catch(err => console.log("Autoplay wideo zablokowany:", err));
                 audio.play().catch(err => console.log("Autoplay audio zablokowany:", err));
 
@@ -57,8 +56,7 @@
                 }, 3000);
             }, { once: true });
 
-            // Kliknięcie w przycisk -> animacja przejścia
-            document.querySelectorAll(".welcome-buttons a").forEach(link => {
+                         document.querySelectorAll(".welcome-buttons a").forEach(link => {
                 link.addEventListener("click", function (e) {
                     e.preventDefault();
                     fadeOutVideoAndAudio(() => {
@@ -72,10 +70,7 @@
             video.classList.add("camera-up");
             content.classList.add("content-fade-out");
 
-            let volume = audio.volume; // np. 1
-            const fadeDuration = 4000; // czas w ms
-            const fadeInterval = 50; // co ile ms zmieniamy głośność
-            const step = volume / (fadeDuration / fadeInterval);
+            let volume = audio.volume;              const fadeDuration = 4000;              const fadeInterval = 50;              const step = volume / (fadeDuration / fadeInterval);
 
             const fade = setInterval(() => {
                 if (volume > 0) {

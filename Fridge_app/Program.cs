@@ -10,7 +10,6 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<FridgeDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -26,12 +25,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-// Configure Gemini Service Options
 builder.Services.Configure<GeminiServiceOptions>(
-    builder.Configuration.GetSection(GeminiServiceOptions.SectionName));
-// Rejestracja serwisu
+   builder.Configuration.GetSection(GeminiServiceOptions.SectionName));
 builder.Services.AddScoped<ProductService>();
-// Rejestracja generycznego repozytorium
 builder.Services.AddScoped<IRepository<Product>, EfCoreRepository<Product>>();
 builder.Services.AddScoped<IRepository<StoredProduct>, EfCoreRepository<StoredProduct>>();
 builder.Services.AddScoped<ProductService>();
@@ -42,7 +38,7 @@ builder.Services.AddScoped<IMealService, MealService>();
 builder.Services.AddScoped<IRepository<Meal>, EfCoreRepository<Meal>>();
 builder.Services.AddScoped<IRepository<Recipe>, EfCoreRepository<Recipe>>();
 builder.Services.AddScoped<IRepository<ProductWithAmount>, EfCoreRepository<ProductWithAmount>>();
-builder.Services.AddScoped<GeminiService>();
+builder.Services.AddHttpClient<GeminiService>();
 builder.Services.AddScoped<NutritionCalculatorService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
@@ -61,11 +57,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedCultures = supportedCultures,
     SupportedUICultures = supportedCultures
 });
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

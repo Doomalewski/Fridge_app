@@ -18,7 +18,7 @@ public class UserService
             query => query
                 .Include(u => u.Fridge)
                     .ThenInclude(sp => sp.Product)
-                .Include(u=>u.CookingTools)
+                .Include(u => u.CookingTools)
         );
     }
     public async Task<User> GetUserByEmailAsync(string email)

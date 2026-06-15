@@ -83,15 +83,10 @@
         <div class="dashboard-grid">
             @foreach (var item in Model.Fridge.OrderBy(p => p.Product.Name))
             {
-                // Oblicz klasę koloru kropki na podstawie daty ważności
-                var daysLeft = (item.ExpirationDate - DateTime.Now).TotalDays;
+                                 var daysLeft = (item.ExpirationDate - DateTime.Now).TotalDays;
                 var freshnessClass = daysLeft switch
                 {
-                    > 5 => "fresh",       // zielony
-                    > 2 => "warning",     // żółty
-                    > 0 => "soon",        // pomarańczowy
-                    _ => "expired"        // czerwony
-                };
+                    > 5 => "fresh",                            > 2 => "warning",                          > 0 => "soon",                             _ => "expired"                         };
                 var letter = string.Empty;
                 if (!string.IsNullOrWhiteSpace(item.Product?.Name))
                 {
@@ -314,8 +309,7 @@
 
 @section Scripts {
     <script>
-        // Inicjalizacja modalów
-        $('#editModal').on('show.bs.modal', function (event) {
+                 $('#editModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             const modal = $(this);
             modal.find('#editProductId').val(button.data('id'));
@@ -425,8 +419,7 @@
             applyFilters();
         });
 
-        // Obsługa powiadomień
-        @if (TempData["Success"] != null)
+                 @if (TempData["Success"] != null)
         {
                 <text>
                     toastr.success('@TempData["Success"]');
@@ -441,8 +434,7 @@
     </script>
 
     <script>
-        // Zaktualizowana funkcja wyszukiwania (case-insensitive)
-        function searchProducts() {
+                 function searchProducts() {
             const searchTerm = document.getElementById('searchTerm').value.toLowerCase();
             const category = document.getElementById('searchCategory').value;
 
@@ -460,22 +452,18 @@
                 });
         }
 
-        // Funkcja wyboru produktu
-        function selectProduct(productId, productName) {
+                 function selectProduct(productId, productName) {
             document.getElementById('selectedProductId').value = productId;
             document.getElementById('selectedProductName').value = productName;
 
-            // Zamknięcie modala wyszukiwania
-            const searchModal = bootstrap.Modal.getInstance(document.getElementById('productSearchModal'));
+                         const searchModal = bootstrap.Modal.getInstance(document.getElementById('productSearchModal'));
             searchModal.hide();
 
-            // Otwarcie modala formularza
-            const addModal = new bootstrap.Modal(document.getElementById('addProductFormModal'));
+                         const addModal = new bootstrap.Modal(document.getElementById('addProductFormModal'));
             addModal.show();
         }
 
-        // Obsługa formularza
-        document.getElementById('addProductForm').addEventListener('submit', async function (e) {
+                 document.getElementById('addProductForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const formData = {
@@ -492,8 +480,7 @@
                 });
 
                 if (response.ok) {
-                    location.reload(); // Odśwież stronę po udanym zapisie
-                } else {
+                    location.reload();                  } else {
                     alert('Wystąpił błąd podczas zapisywania');
                 }
             } catch (error) {

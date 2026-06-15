@@ -267,8 +267,7 @@
 
 @section Scripts {
     <script>
-        // Funkcja do obliczania celów ¿ywieniowych (bez zapisywania)
-        function calculateNutrition() {
+                 function calculateNutrition() {
             const age = document.getElementById('Age').value;
             const height = document.getElementById('Height').value;
             const weight = document.getElementById('CurrentWeight').value;
@@ -281,13 +280,11 @@
                 return;
             }
 
-            // Wy³¹cz przycisk i poka¿ loader
-            const btn = document.getElementById('calculateBtn');
+                         const btn = document.getElementById('calculateBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Obliczanie...';
 
-            // Wyœlij do akcji obliczaj¹cej (GET z parametrami)
-            const params = new URLSearchParams({
+                         const params = new URLSearchParams({
                 'Age': age,
                 'Height': height,
                 'CurrentWeight': weight,
@@ -300,8 +297,7 @@
             window.location.href = '@Url.Action("CalculateNutritionPreview", "User")' + '?' + params.toString();
         }
 
-        // Funkcja do aktualizacji wartoœci suwaka
-        function updateSliderValue(sliderId, valueSpanId, unit) {
+                 function updateSliderValue(sliderId, valueSpanId, unit) {
             const slider = document.getElementById(sliderId);
             const valueSpan = document.getElementById(valueSpanId);
             const value = parseFloat(slider.value);
@@ -312,12 +308,10 @@
                 valueSpan.textContent = value.toFixed(1);
             }
             
-            // Aktualizuj BMI w czasie rzeczywistym
-            updateBMI();
+                         updateBMI();
         }
 
-        // Funkcja do obliczania i aktualizacji BMI
-        function updateBMI() {
+                 function updateBMI() {
             const height = parseFloat(document.getElementById('Height').value);
             const weight = parseFloat(document.getElementById('CurrentWeight').value);
             
@@ -340,8 +334,7 @@
                     bmiClass = 'alert-danger';
                 }
                 
-                // Utwórz lub zaktualizuj alert BMI
-                let bmiAlert = document.getElementById('bmiAlert');
+                                 let bmiAlert = document.getElementById('bmiAlert');
                 if (!bmiAlert) {
                     bmiAlert = document.createElement('div');
                     bmiAlert.id = 'bmiAlert';
@@ -353,8 +346,7 @@
                     document.querySelector('.dashboard-card:first-child .card-content').appendChild(bmiAlert);
                 }
                 
-                // Zaktualizuj klasê i wartoœci
-                bmiAlert.className = 'alert ' + bmiClass + ' mt-3';
+                                 bmiAlert.className = 'alert ' + bmiClass + ' mt-3';
                 document.getElementById('bmiValue').textContent = bmi.toFixed(1);
                 document.getElementById('bmiCategory').textContent = bmiCategory;
             }
@@ -368,8 +360,7 @@
                 }, index * 150);
             });
             
-            // Inicjalizuj wartoœci suwaków
-            updateSliderValue('Age', 'ageValue', ' lat');
+                         updateSliderValue('Age', 'ageValue', ' lat');
             updateSliderValue('Height', 'heightValue', ' cm');
             updateSliderValue('CurrentWeight', 'weightValue', ' kg');
         });

@@ -15,7 +15,7 @@ namespace Fridge_app.Models
 
         [Range(0.01, double.MaxValue)]
         public double Amount { get; set; }
-        public int RecipeId { get; set; } 
+        public int RecipeId { get; set; }
 
         [ForeignKey("RecipeId")]
         public Recipe Recipe { get; set; }

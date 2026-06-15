@@ -56,14 +56,12 @@ namespace Fridge_app.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Ensure ingredients are attached only once to avoid duplicate inserts
                 if (products?.Any() == true)
                 {
                     recipe.Ingridients = products;
                 }
 
-                await _recipeRepository.AddAsync(recipe); // Saves recipe with its ingredients
-
+                await _recipeRepository.AddAsync(recipe);
                 meal.RecipeId = recipe.Id;
                 await _mealRepository.AddAsync(meal);
 
@@ -95,10 +93,9 @@ namespace Fridge_app.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Usuń wszystkie składniki (ProductWithAmount) związane z przepisem
                 var ingredients = await _context.Set<ProductWithAmount>()
-                    .Where(p => p.RecipeId == recipeId)
-                    .ToListAsync();
+   .Where(p => p.RecipeId == recipeId)
+   .ToListAsync();
 
                 foreach (var ingredient in ingredients)
                 {
@@ -107,7 +104,6 @@ namespace Fridge_app.Services
 
                 await _context.SaveChangesAsync();
 
-                // Usuń sam przepis
                 var recipe = await _recipeRepository.GetByIdAsync(recipeId);
                 if (recipe != null)
                 {

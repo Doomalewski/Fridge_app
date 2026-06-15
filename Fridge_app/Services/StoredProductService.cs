@@ -2,7 +2,6 @@
 using Fridge_app.Models;
 using Fridge_app.Repositories;
 using Microsoft.EntityFrameworkCore;
-using GenerativeAI.Types;
 
 namespace Fridge_app.Services
 {
@@ -15,7 +14,6 @@ namespace Fridge_app.Services
             _storedProductRepository = storedProductRepository;
         }
 
-        // W StoredProductService.cs
         public async Task AddProductToFridgeAsync(int userId, AddProductViewModel model)
         {
             var storedProduct = new StoredProduct

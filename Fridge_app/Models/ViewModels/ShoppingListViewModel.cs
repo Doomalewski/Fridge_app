@@ -23,7 +23,7 @@ namespace Fridge_app.Models.ViewModels
         [Required(ErrorMessage = "Nazwa listy jest wymagana")]
         [StringLength(120, ErrorMessage = "Nazwa jest za d³uga")]
         public string Name { get; set; } = string.Empty;
-        
+
         [Display(Name = "Bud¿et (PLN)")]
         [Range(0, 100000, ErrorMessage = "Bud¿et musi byæ wartoœci¹ dodatni¹")]
         public decimal? Budget { get; set; }

@@ -71,7 +71,6 @@ namespace Fridge_app.Controllers
                 }
             }
 
-            // Jeśli wystąpiły błędy, wróć do widoku z formularzem
             return RedirectToAction("AddProduct");
         }
         [HttpPost]

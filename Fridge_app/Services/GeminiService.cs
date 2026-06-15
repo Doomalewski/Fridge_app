@@ -1,5 +1,3 @@
-using GenerativeAI.Types;
-using GenerativeAI;
 using Fridge_app.Models;
 using Fridge_app.Models.ViewModels;
 using Fridge_app.Exceptions;
@@ -8,109 +6,134 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace Fridge_app.Services
 {
     public class GeminiService
     {
         private readonly string _apiKey;
-        private readonly GenerativeModel _model;
+        private readonly string _modelName;
+        private readonly string _endpoint;
+        private readonly HttpClient _httpClient;
         private readonly ProductService _productService;
 
-        public GeminiService(ProductService productService, IOptions<GeminiServiceOptions> options)
+        public GeminiService(ProductService productService, IOptions<GeminiServiceOptions> options, HttpClient httpClient)
         {
             _productService = productService;
-            _apiKey = options.Value.ApiKey ?? throw new ArgumentNullException(nameof(options), "Gemini API Key is not configured in appsettings.json");
-            var googleAI = new GoogleAi(_apiKey);
-            _model = googleAI.CreateGenerativeModel(options.Value.ModelName);
+            _apiKey = options.Value.ApiKey ?? throw new ArgumentNullException(nameof(options), "API Key is not configured in appsettings.json");
+            _modelName = options.Value.ModelName;
+            _endpoint = options.Value.Endpoint;
+            _httpClient = httpClient;
+        }
+
+        private async Task<string> CallOpenRouterAsync(string prompt)
+        {
+            try
+            {
+                var requestBody = new
+                {
+                    model = _modelName,
+                    messages = new[]
+                    {
+                        new { role = "user", content = prompt }
+                    }
+                };
+
+                var jsonContent = JsonConvert.SerializeObject(requestBody);
+                var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+                request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+                request.Content = httpContent;
+
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var responseObj = JObject.Parse(responseBody);
+
+                var text = responseObj["choices"]?[0]?["message"]?["content"]?.ToString();
+                return text?.Trim() ?? "Nie udaÅ‚o siÄ™ wygenerowaÄ‡ odpowiedzi";
+            }
+            catch (Exception ex)
+            {
+                return $"BÅ‚Ä…d podczas generowania odpowiedzi: {ex.Message}";
+            }
         }
 
         public async Task<string> GenerateResponseAsync(string prompt)
         {
-            try
-            {
-                var response = await _model.GenerateContentAsync(prompt);
-                return response?.Text?.Trim() ?? "Nie uda³o siê wygenerowaæ odpowiedzi";
-            }
-            catch (Exception ex)
-            {
-                return $"B³¹d podczas generowania odpowiedzi: {ex.Message}";
-            }
+            return await CallOpenRouterAsync(prompt);
         }
 
         public async Task<MealCreateViewModel> GenerateMealAsync(IEnumerable<StoredProduct> storedProducts, List<CookingTool> cookingTools, MealGenerationPreferencesViewModel? preferences = null)
         {
             var productsList = storedProducts?.ToList() ?? new List<StoredProduct>();
 
-            // Sprawdzenie czy mamy jakieœ produkty
             if (!productsList.Any())
             {
-                throw new InsufficientProductsException("Brak produktów w lodówce. Dodaj produkty, aby wygenerowaæ przepis.");
+                throw new InsufficientProductsException("Brak produktï¿½w w lodï¿½wce. Dodaj produkty, aby wygenerowaï¿½ przepis.");
             }
 
-            // Obliczenie ca³kowitej iloœci produktów
             var totalProductAmount = productsList.Sum(p => p.Quantity);
             if (totalProductAmount <= 0)
             {
-                throw new InsufficientProductsException("Iloœæ produktów w lodówce jest za ma³a. Dodaj wiêcej produktów, aby wygenerowaæ przepis.");
+                throw new InsufficientProductsException("Iloï¿½ï¿½ produktï¿½w w lodï¿½wce jest za maï¿½a. Dodaj wiï¿½cej produktï¿½w, aby wygenerowaï¿½ przepis.");
             }
 
             var productsString = string.Join(", ", productsList.Select(sp => sp.ToString()));
             var cookingToolsString = string.Join(", ", cookingTools.Select(ct => ct.ToString()));
 
-            // Budowanie preferencji dla prompta
             var preferencesString = BuildPreferencesString(preferences);
 
-            // Pobranie instrukcji dotycz¹cej jêzyka
             var languageInstruction = GetLanguageInstruction(preferences?.Language ?? "pl");
 
             var prompt = languageInstruction + Environment.NewLine + Environment.NewLine +
-             "Na podstawie poni¿szych danych wygeneruj propozycjê posi³ku w formacie czystego JSON zgodnego ze schematem." + Environment.NewLine +
+             "Na podstawie poniï¿½szych danych wygeneruj propozycjï¿½ posiï¿½ku w formacie czystego JSON zgodnego ze schematem." + Environment.NewLine +
       Environment.NewLine +
-             "Sk³adniki (produkty z lodówki):" + Environment.NewLine +
+             "Skï¿½adniki (produkty z lodï¿½wki):" + Environment.NewLine +
          productsString + Environment.NewLine +
              Environment.NewLine +
-               "Dostêpne narzêdzia kuchenne:" + Environment.NewLine +
+               "Dostï¿½pne narzï¿½dzia kuchenne:" + Environment.NewLine +
        cookingToolsString + Environment.NewLine +
-            (string.IsNullOrWhiteSpace(preferencesString) ? "" : "Preferencje u¿ytkownika:" + Environment.NewLine + preferencesString + Environment.NewLine) +
+            (string.IsNullOrWhiteSpace(preferencesString) ? "" : "Preferencje uï¿½ytkownika:" + Environment.NewLine + preferencesString + Environment.NewLine) +
           "---" + Environment.NewLine +
                "Wygeneruj obiekt JSON zgodny ze schematem:" + Environment.NewLine +
              "{\"Description\": \"string\",\"Calories\": number,\"Category\": \"Breakfast | Lunch | Dinner | Snack | Other\",\"Recipe\": {\"Name\": \"string\",\"Difficulty\": \"Easy | Medium | Hard\",\"CreatedAt\": \"yyyy-MM-ddTHH:mm:ss\",\"Ingridients\": [{\"ProductId\": number, \"Amount\": number}],\"Steps\": [{\"StepNumber\": number, \"Instruction\": \"string\", \"StepTime\": number}],\"CookingTools\": [{\"Id\": number, \"Name\": \"string\"}]},\"SelectedProducts\": [{\"ProductId\": number, \"Amount\": number}]}" +
          Environment.NewLine + "---" + Environment.NewLine +
        "Zasady:" + Environment.NewLine +
-      "- OdpowiedŸ MUSI byæ czystym JSON-em bez komentarzy, opisu, ani dodatkowego tekstu." + Environment.NewLine +
-           "- Wszystkie wartoœci tekstowe w podwójnych cudz³ach." + Environment.NewLine +
+      "- Odpowiedï¿½ MUSI byï¿½ czystym JSON-em bez komentarzy, opisu, ani dodatkowego tekstu." + Environment.NewLine +
+           "- Wszystkie wartoï¿½ci tekstowe w podwï¿½jnych cudzï¿½ach." + Environment.NewLine +
               "- Difficulty: tylko Easy, Medium, Hard." + Environment.NewLine +
            "- Category: tylko Breakfast, Lunch, Dinner, Snack, Other." + Environment.NewLine +
            "- Amount podawaj w gramach lub mililitrach (bez jednostek, tylko liczba)." + Environment.NewLine +
-            "- U¿ywaj sk³adników tylko z listy produktów." + Environment.NewLine +
-            "- Narzêdzia ogranicz do tych dostêpnych w sekcji Dostêpne narzêdzia kuchenne." + Environment.NewLine +
+            "- Uï¿½ywaj skï¿½adnikï¿½w tylko z listy produktï¿½w." + Environment.NewLine +
+            "- Narzï¿½dzia ogranicz do tych dostï¿½pnych w sekcji Dostï¿½pne narzï¿½dzia kuchenne." + Environment.NewLine +
            "- Czas (StepTime) w minutach." + Environment.NewLine +
-        "- CreatedAt ustaw na bie¿¹c¹ datê.";
+        "- CreatedAt ustaw na bieï¿½ï¿½cï¿½ datï¿½.";
 
             try
             {
-                var response = await _model.GenerateContentAsync(prompt);
-                var jsonResponse = CleanJsonResponse(response?.Text);
+                var responseText = await CallOpenRouterAsync(prompt);
+                var jsonResponse = CleanJsonResponse(responseText);
 
                 if (string.IsNullOrWhiteSpace(jsonResponse))
                 {
-                    throw new InsufficientProductsException("AI nie potrafi³ wygenerowaæ przepisu z dostêpnych produktów. Spróbuj dodaæ wiêcej ró¿nych produktów do lodówki.");
+                    throw new InsufficientProductsException("AI nie potrafiÅ‚o wygenerowaÄ‡ przepisu z dostÄ™pnych produktÃ³w. SprÃ³buj dodaÄ‡ wiÄ™cej rÃ³Å¼nych produktÃ³w do lodÃ³wki.");
                 }
 
                 var mealViewModel = JsonConvert.DeserializeObject<MealCreateViewModel>(jsonResponse);
                 if (mealViewModel == null)
                 {
-                    throw new InsufficientProductsException("Nie uda³o siê przetworzyæ odpowiedzi AI. Spróbuj ponownie.");
+                    throw new InsufficientProductsException("Nie udaÅ‚o siÄ™ przetworzyÄ‡ odpowiedzi AI. SprÃ³buj ponownie.");
                 }
 
-                // Sprawdzenie czy przepis ma sk³adniki
                 if (mealViewModel.Recipe?.Ingridients == null || !mealViewModel.Recipe.Ingridients.Any())
                 {
-                    throw new InsufficientProductsException("AI wygenerowa³ przepis bez sk³adników. Dodaj wiêcej produktów do lodówki i spróbuj ponownie.");
+                    throw new InsufficientProductsException("AI wygenerowaÅ‚o przepis bez skÅ‚adnikÃ³w. Dodaj wiÄ™cej produktÃ³w do lodÃ³wki i sprÃ³buj ponownie.");
                 }
 
-                // Sprawdzenie czy wszystkie wymagane narzêdzia kuchenne s¹ dostêpne
                 if (mealViewModel.Recipe?.CookingTools != null && mealViewModel.Recipe.CookingTools.Any())
                 {
                     var availableToolNames = new HashSet<string>(cookingTools.Select(ct => ct.Name), StringComparer.OrdinalIgnoreCase);
@@ -123,7 +146,7 @@ namespace Fridge_app.Services
                     if (missingTools.Any())
                     {
                         var missingToolsString = string.Join(", ", missingTools);
-                        throw new InsufficientProductsException($"Brakuje nastêpuj¹cych narzêdzi kuchennych do przygotowania tego posi³ku: {missingToolsString}. Dodaj brakuj¹ce narzêdzia lub spróbuj ponownie.");
+                        throw new InsufficientProductsException($"Brakuje nastÄ™pujÄ…cych narzÄ™dzi kuchennych do przygotowania tego posiÅ‚ku: {missingToolsString}. Dodaj brakujÄ…ce narzÄ™dzia lub sprÃ³buj ponownie.");
                     }
                 }
 
@@ -138,11 +161,11 @@ namespace Fridge_app.Services
             }
             catch (JsonException ex)
             {
-                throw new InsufficientProductsException("B³¹d przetwarzania odpowiedzi AI. OdpowiedŸ nie by³a poprawnym JSON-em. Spróbuj ponownie.", ex);
+                throw new InsufficientProductsException("BÅ‚Ä…d przetwarzania odpowiedzi AI. OdpowiedÅº nie byÅ‚a poprawnym JSON-em. SprÃ³buj ponownie.", ex);
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("B³¹d przetwarzania odpowiedzi AI", ex);
+                throw new ApplicationException("BÅ‚Ä…d przetwarzania odpowiedzi AI", ex);
             }
         }
 
@@ -150,7 +173,7 @@ namespace Fridge_app.Services
         {
             var budgetInfo = request.Budget.HasValue
                 ? $"{request.Budget.Value:0.##} PLN"
-                : "brak okreœlonego limitu";
+                : "brak okreÅ›lonego limitu";
 
             var cuisineInfo = string.IsNullOrWhiteSpace(request.Cuisine)
                 ? "dowolna"
@@ -164,41 +187,41 @@ namespace Fridge_app.Services
                 ? "brak dodatkowych preferencji"
                 : request.AdditionalNotes;
 
-            var prompt = "Przygotuj listê zakupów w jêzyku polskim na podstawie poni¿szych danych wejœciowych. " +
-                         "Zwróæ czysty JSON bez komentarzy ani dodatkowego tekstu." + Environment.NewLine +
-                         $"Bud¿et: {budgetInfo}{Environment.NewLine}" +
+            var prompt = "Przygotuj listÄ™ zakupÃ³w w jÄ™zyku polskim na podstawie poniÅ¼szych danych wejÅ›ciowych. " +
+                         "ZwrÃ³Ä‡ czysty JSON bez komentarzy ani dodatkowego tekstu." + Environment.NewLine +
+                         $"BudÅ¼et: {budgetInfo}{Environment.NewLine}" +
                          $"Rodzaj kuchni: {cuisineInfo}{Environment.NewLine}" +
-                         $"Planowane danie / cel zakupów: {dishInfo}{Environment.NewLine}" +
+                         $"Planowane danie / cel zakupÃ³w: {dishInfo}{Environment.NewLine}" +
                          $"Uwagi: {notesInfo}{Environment.NewLine}" +
                          "JSON schema: {\"items\":[{\"name\":\"string\",\"quantity\":\"string\",\"category\":\"string\"}]}" + Environment.NewLine +
                          "Zasady:" + Environment.NewLine +
                          "- Maksymalnie 15 pozycji." + Environment.NewLine +
-                         "- Iloœci podawaj w sensownych jednostkach: g/ml dla produktów na wagê, sztuki/opakowania/butelki/puszki/kartony dla reszty (np. butelka oliwy, paczka ry¿u, bochenek chleba)." + Environment.NewLine +
-                         "- Unikaj gramów tam, gdzie typowo kupuje siê produkt w opakowaniu (nie \"100g oliwy\", tylko \"butelka oliwy\")." + Environment.NewLine +
-                         "- Dopasuj listê do bud¿etu (tañsze zamienniki gdy trzeba)." + Environment.NewLine +
-                         "- Preferuj sk³adniki ³atwo dostêpne w Polsce." + Environment.NewLine +
-                         "- Zwróæ TYLKO JSON dok³adnie w podanym schemacie.";
+                         "- IloÅ›ci podawaj w sensownych jednostkach: g/ml dla produktÃ³w na wagÄ™, sztuki/opakowania/butelki/puszki/kartony dla reszty (np. butelka oliwy, paczka ryÅ¼u, bochenek chleba)." + Environment.NewLine +
+                         "- Unikaj gramÃ³w tam, gdzie typowo kupuje siÄ™ produkt w opakowaniu (nie \"100g oliwy\", tylko \"butelka oliwy\")." + Environment.NewLine +
+                         "- Dopasuj listÄ™ do budÅ¼etu (taÅ„sze zamienniki gdy trzeba)." + Environment.NewLine +
+                         "- Preferuj skÅ‚adniki Å‚atwo dostÄ™pne w Polsce." + Environment.NewLine +
+                         "- ZwrÃ³Ä‡ TYLKO JSON dokÅ‚adnie w podanym schemacie.";
 
             try
             {
-                var response = await _model.GenerateContentAsync(prompt);
-                var jsonResponse = CleanJsonResponse(response?.Text);
+                var responseText = await CallOpenRouterAsync(prompt);
+                var jsonResponse = CleanJsonResponse(responseText);
 
                 var aiResult = JsonConvert.DeserializeObject<ShoppingListAiResponse>(jsonResponse);
                 if (aiResult?.Items == null || !aiResult.Items.Any())
                 {
-                    throw new ApplicationException("AI nie zwróci³o pozycji listy zakupów.");
+                    throw new ApplicationException("AI nie zwrÃ³ciÅ‚o pozycji listy zakupÃ³w.");
                 }
 
                 return aiResult.Items;
             }
             catch (JsonException ex)
             {
-                throw new ApplicationException("Nie uda³o siê przetworzyæ odpowiedzi AI dla listy zakupów.", ex);
+                throw new ApplicationException("Nie udaÅ‚o siÄ™ przetworzyÄ‡ odpowiedzi AI dla listy zakupÃ³w.", ex);
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("B³¹d generowania listy zakupów", ex);
+                throw new ApplicationException("BÅ‚Ä…d generowania listy zakupÃ³w", ex);
             }
         }
 
@@ -216,22 +239,22 @@ namespace Fridge_app.Services
                     return $"{i.Name} ({qty}{category})";
                 }));
 
-                var budgetInfo = list.Budget.HasValue ? $"{list.Budget.Value:0.##} PLN" : "brak bud¿etu";
+                var budgetInfo = list.Budget.HasValue ? $"{list.Budget.Value:0.##} PLN" : "brak budÅ¼etu";
                 var cuisineInfo = string.IsNullOrWhiteSpace(list.Cuisine) ? "dowolna" : list.Cuisine;
                 var dishInfo = string.IsNullOrWhiteSpace(list.DesiredDish) ? "brak" : list.DesiredDish;
 
                 var prompt =
-                    "Oszacuj realny minimalny i maksymalny ³¹czny koszt zakupów (PLN) dla poni¿szej listy w typowych polskich marketach. " +
-                    "Uwzglêdnij orientacyjne ceny popularnych marek i marek w³asnych, bez luksusowych produktów. " +
-                    "Zwróæ TYLKO czysty JSON bez komentarzy w formacie {\"min\": number, \"max\": number} z kropk¹ jako separatorem dziesiêtnym.\n" +
-                    $"Bud¿et u¿ytkownika: {budgetInfo}\n" +
+                    "Oszacuj realny minimalny i maksymalny Å‚Ä…czny koszt zakupÃ³w (PLN) dla poniÅ¼szej listy w typowych polskich marketach. " +
+                    "UwzglÄ™dnij orientacyjne ceny popularnych marek i marek wÅ‚asnych, bez luksusowych produktÃ³w. " +
+                    "ZwrÃ³Ä‡ TYLKO czysty JSON bez komentarzy w formacie {\"min\": number, \"max\": number} z kropkÄ… jako separatorem dziesiÄ™tnym.\n" +
+                    $"BudÅ¼et uÅ¼ytkownika: {budgetInfo}\n" +
                     $"Preferowana kuchnia: {cuisineInfo}\n" +
-                    $"Planowane danie/cel zakupów: {dishInfo}\n" +
+                    $"Planowane danie/cel zakupÃ³w: {dishInfo}\n" +
                     $"Pozycje listy: {itemsDescription}\n" +
-                    "Zasady: (1) nie dodawaj waluty w wartoœciach, (2) nie dodawaj komentarzy, (3) min <= max.";
+                    "Zasady: (1) nie dodawaj waluty w wartoÅ›ciach, (2) nie dodawaj komentarzy, (3) min <= max.";
 
-                var response = await _model.GenerateContentAsync(prompt);
-                var jsonResponse = CleanJsonResponse(response?.Text);
+                var responseText = await CallOpenRouterAsync(prompt);
+                var jsonResponse = CleanJsonResponse(responseText);
 
                 if (string.IsNullOrWhiteSpace(jsonResponse))
                     return (0m, 0m);
@@ -311,12 +334,12 @@ namespace Fridge_app.Services
 
             if (!string.IsNullOrWhiteSpace(preferences.MealType))
             {
-                preferencesLines.Add($"- Typ posi³ku: {preferences.MealType}");
+                preferencesLines.Add($"- Typ posiï¿½ku: {preferences.MealType}");
             }
 
             if (!string.IsNullOrWhiteSpace(preferences.Difficulty))
             {
-                preferencesLines.Add($"- Poziom trudnoœci: {preferences.Difficulty}");
+                preferencesLines.Add($"- Poziom trudnoï¿½ci: {preferences.Difficulty}");
             }
 
             if (!string.IsNullOrWhiteSpace(preferences.PrepTime))
@@ -331,12 +354,12 @@ namespace Fridge_app.Services
 
             if (preferences.IsVegan)
             {
-                preferencesLines.Add("- Posi³ek MUSI byæ wegañski (bez produktów zwierzêcych)");
+                preferencesLines.Add("- Posiï¿½ek MUSI byï¿½ wegaï¿½ski (bez produktï¿½w zwierzï¿½cych)");
             }
 
             if (preferences.IsVegetarian && !preferences.IsVegan)
             {
-                preferencesLines.Add("- Posi³ek MUSI byæ wegetariañski (bez miêsa)");
+                preferencesLines.Add("- Posiï¿½ek MUSI byï¿½ wegetariaï¿½ski (bez miï¿½sa)");
             }
 
             if (!string.IsNullOrWhiteSpace(preferences.AdditionalPreferences))

@@ -34,7 +34,6 @@ namespace Fridge_app.Models
         [Required]
         public GoalType Goal { get; set; }
 
-        // Poziom aktywnoœci u¿ytkownika
         [Required]
         public ActivityLevel ActivityLevel { get; set; }
 

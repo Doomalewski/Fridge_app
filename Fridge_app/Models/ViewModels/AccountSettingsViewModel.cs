@@ -7,7 +7,6 @@ namespace Fridge_app.Models.ViewModels
     {
         public string Email { get; set; }
 
-        // Wybór diety, aktywnoœci i celu - to jedyne pola które u¿ytkownik wybiera
         [Display(Name = "Wybierz dietê")]
         public string SelectedDietType { get; set; }
 
@@ -21,7 +20,6 @@ namespace Fridge_app.Models.ViewModels
         [Required(ErrorMessage = "Wybierz cel ¿ywieniowy")]
         public GoalType? NutritionGoal { get; set; }
 
-        // Statystyki zdrowotne
         [Display(Name = "Wiek")]
         [Range(1, 120, ErrorMessage = "Wiek musi byæ w przedziale 1-120")]
         [Required(ErrorMessage = "Wiek jest wymagany")]
@@ -44,7 +42,6 @@ namespace Fridge_app.Models.ViewModels
         [Display(Name = "Cel")]
         public string Goal { get; set; }
 
-        // Obliczone wartoœci (tylko do wyœwietlenia, nie do edycji)
         public int? CalculatedCalories { get; set; }
         public double? CalculatedProtein { get; set; }
         public double? CalculatedFat { get; set; }
